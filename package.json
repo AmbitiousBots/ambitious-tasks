@@ -1,0 +1,17 @@
+{
+  "name": "ambitious-tasks",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "tlc": "bash spec/check.sh"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

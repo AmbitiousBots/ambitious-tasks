@@ -1,0 +1,6 @@
+{
+  "AddDepNoCycleCheck": "NoCycle",
+  "NextIgnoresDeps": "NextOnlyUnblocked",
+  "SetStatusOverwritesDone": "DoneIsTerminalUnlessReopened",
+  "DepRemovedNotLogged": "ReplayEqualsState"
+}
