@@ -1,104 +1,60 @@
 ---
 name: verify-formal-tasks
-description: "Check the task tracker's four lifecycle rules and its cycle check against the TLA+ model and the Lean proof. Use when a change touches adding or removing dependencies, status changes or reopening, the next command or ranking, event writes, rebuild or import, or any file in spec/ or proofs/."
+description: Check the task lifecycle invariants and the cycle and readiness proofs. Use when changing dependencies, ranking, explicit reopening, imports, event projection, rebuild, or any file in spec/ or proofs/.
 ---
 
-# Formal verification for the tasks module
+# Formal verification for tasks
 
-## What is verified
+## Promises and limits
 
-| Rule | In plain words | Harm if it breaks |
+| Rule | Promise | Code that enforces it |
 |---|---|---|
-| `NoCycle` | No task ever waits on itself, directly or through other tasks. | Tasks in the loop can never start. |
-| `NextOnlyUnblocked` | "What next" never returns a closed task or one with a prerequisite that is not done. | A bot starts work that cannot be finished yet. |
-| `DoneIsTerminalUnlessReopened` | A finished task changes status only through an explicit reopen. | Finished work silently reopens. |
-| `ReplayEqualsState` | Replaying the event history gives exactly the stored tables. | `rebuild` produces different data than the bots read. |
-| `addDep_ok_iff` (Lean) | The check "b does not lead to a, and a is not b" accepts exactly the dependencies that keep the graph free of cycles, at every size. | A safe dependency is refused, or a cycle is stored. |
-| `next_sound` (Lean) | Every task `next` returns has all its prerequisites done. | Same as `NextOnlyUnblocked`. |
+| `NoCycle` | Stored tasks never depend on themselves through a chain. | `addDep` and `checkGraph` in `src/domain/graph.ts`; `addTask`, `changeDependency` and `importTasks` in `src/db/tasks.ts` check before appending changes. |
+| `NextOnlyUnblocked` | Next work is open and every prerequisite is done. | `rank` in `src/domain/graph.ts` uses the complete task status map, then the CLI applies selection filters. |
+| `DoneIsTerminalUnlessReopened` | A finished task changes status only through an explicit reopen to todo. | `parseStatusChange` in `src/domain/lifecycle.ts`; `changeStatus` and `importTasks` enforce it, and `parseUpdate` excludes status patches. |
+| `ReplayEqualsState` | Replaying events gives the stored tasks and dependencies. | `appendEvent` records complete task snapshots; the kit `writeCommand` wraps writes in one transaction; `rebuild` folds the snapshots and replaces projections atomically. |
+| `addDep_ok_iff` | The reachability check accepts exactly the edge additions that preserve acyclicity. | `proofs/CycleCheck.lean` proves the definition; the 10,000-graph TypeScript property test compares `addDep` with an independent cycle evaluator. |
+| `next_sound` | Every selected task has its prerequisites done. | `proofs/CycleCheck.lean` proves the selection definition; domain and CLI tests exercise real ranking and cross-list prerequisites. |
 
-Tools: TLA+ with the TLC model checker for the order-of-steps rules, because the question is whether any order of commands can reach a bad state. Lean 4 with Mathlib for the cycle check, because that must hold for graphs of every size and a four-task model cannot show that.
+The TLA+ model has four tasks and checks every reachable state under that bound. It abstracts task content, timestamps, the full SQL schema and scheduling. Lean proves graph properties without a size bound. Neither tool proves that all TypeScript or SQLite behavior matches the model; contract, property, concurrency and end-to-end tests bridge those interfaces.
 
-Bounds: the model has four tasks, with no limit on the number of steps. The Lean proof has no bound. `spec/README.md` lists what is left out.
+A model action corresponds to one database transaction. `withReadSnapshot` provides one consistent read snapshot while another process writes. The SQL schema rejects updates and deletes to `events`. These database details are covered by integration tests rather than by the abstract lifecycle model.
 
-## The one command
+## Run
 
-From the repo root:
-
-```sh
-bash spec/check.sh && (cd proofs && (lake exe cache get || true) && lake build)
-```
-
-`spec/check.sh` installs Java 21 through mise, downloads `tla2tools.jar` 1.8.0 into `~/.cache/ambitious/` and refuses it unless its SHA-256 matches the pinned value. It runs the model (must pass; about two minutes) and every variant in `spec/broken/` (each must fail on the rule named in `spec/broken/EXPECTED.json`). It ends with a line that starts `OK:`. `lake exe cache get` downloads prebuilt Mathlib and only saves time, so its failure is ignored. `lake build` needs `elan`; it ends with `Build completed successfully`, and fails if any theorem depends on an axiom outside the list written next to it in `proofs/CycleCheck.lean`, which includes an unfinished proof.
-
-## Covered code
-
-Last confirmed in step with the code at commit `a354f6158b59ae93287e7b1bca8aa420438b2ab7`. At that commit the tracker code does not exist yet; the model describes the design in `spec/README.md` and the types in `src/domain/types.ts`.
-
-| Model or proof part | Code it describes |
-|---|---|
-| `AddDep`, `Reaches`; `addDep_ok`, `reachable` in Lean | `addDep` in `src/domain`, and the cycle check `import` runs before it commits |
-| `RemoveDep` | the `dep rm` command |
-| `SetStatus`, `Reopen` | the `status` command; `StatusChange` in `src/domain/types.ts` |
-| `AskNext`, `Ready`; `next`, `unblocked` in Lean | `rank` in `src/domain` and the `next` command |
-| `AppendEvent`, `Apply`, `replayed` | the write transaction in `src/db` (append event, apply to `tasks` and `deps`) and `rebuild` |
-| `status`, `deps` | the `tasks.status` column and the `deps` table |
-
-Run `git log a354f6158b59ae93287e7b1bca8aa420438b2ab7..HEAD -- src/domain src/db spec proofs`. If it lists commits, read them against the table before you trust a pass. Move the commit above forward only after you have confirmed that every row still describes the code at the new commit.
-
-One step in the model is one transaction in the code. If a write is ever split across transactions, the model no longer describes it; model the split before relying on a pass.
-
-## Reading a result
-
-When a check fails, `spec/check.sh` prints TLC's full output. Find the line `Error: Invariant <Rule> is violated.`; the rule it names is the one that broke. Below it TLC prints the shortest path to the bad state as numbered states (shortened here):
-
-```
-Error: Invariant NextOnlyUnblocked is violated.
-Error: The behavior up to this point is:
-State 1: <Initial predicate>
-/\ offered = {}
-/\ deps = {}
-/\ status = (t1 :> "absent" @@ t2 :> "absent" @@ t3 :> "absent" @@ t4 :> "absent")
-...
-
-State 2: <Add(t1) line 56, col 3 to line 60, col 19 of module NextIgnoresDeps>
-/\ offered = {}
-/\ deps = {}
-/\ status = (t1 :> "todo" @@ t2 :> "absent" @@ t3 :> "absent" @@ t4 :> "absent")
-...
-```
-
-Each `State N` header names the step that led to that state, and the lines under it give the value of every variable after the step. Read down the list and compare each state with the one before it: the variables that changed are what the step did. The last state is the one that breaks the rule. Write the path down as one command per line before deciding anything.
-
-To run one model by hand and keep the output, use the jar the script downloaded, from the repo root:
+Install the pinned tools through mise and elan as described in README.md. From the repository root:
 
 ```sh
-(cd spec/broken && mise exec -- java -cp ~/.cache/ambitious/tla2tools-1.8.0.jar tlc2.TLC -workers 1 -metadir "$(mktemp -d)" -noGenerateSpecTE -config NextIgnoresDeps.cfg NextIgnoresDeps.tla)
+npm run tlc && npm run lean
 ```
 
-To tell the path in the tracker's words:
+The kit TLC runner verifies its downloaded jar checksum, runs the primary model, and requires each deliberately broken variant to fail its named invariant from `spec/broken/EXPECTED.json`. A positive row includes the explored state count. A broken variant is a successful check only when it violates its expected rule. `npm run lean` requests the optional Mathlib cache and then requires `lake build` to succeed. A missing cache never skips proof checking.
 
-- `Add`, `AddDep`, `RemoveDep`, `SetStatus`, `Reopen` are the commands `add`, `dep add`, `dep rm`, `status` and a reopen. `AskNext` is `next`.
-- `status` is each task's stored status; `absent` means not created yet.
-- `deps` holds pairs: `<<t2, t1>>` means t2 depends on t1.
-- `offered` is what the last `next` returned.
-- `replayed` is what the event history says the tables should hold. If it differs from `status` and `deps`, a write and its event disagree.
-- `lastEvent` is the newest event; `lastTaskWasDone` says whether its task was done just before.
+The Lean proof uses a local membership instance that reads a finite set's underlying multiset directly. This is definitionally the same membership relation and preserves the constructive axiom bounds when newer library set-coercion instances carry an additional classical assumption. The theorem statements and graph definitions retain their meaning.
 
-Example, from `spec/broken/NextIgnoresDeps`: add t1, add t2, make t2 depend on t1, ask `next`; the answer includes t2 although t1 is still todo.
+`proofs/CycleCheck.lean` contains exact axiom guards. An unfinished proof introduces `sorryAx`, which makes the build fail. Do not loosen an invariant, a guard, or an expected failure to make a check pass.
 
-When the model passes, the `PASS` line gives the number of distinct states TLC checked. `spec/check.sh` fails if that number is too small for the model to be exploring anything.
+## Correspondence record
 
-## Real bug or modeling error
+The implementation correspondence was reviewed at commit `e7e99d6570818c844143c7256af1d533b22699bb`, after the full release check passed. The table above records the reviewed guards and transaction boundaries. When committing a changed implementation, record its reviewed commit here after verifying that the listed functions still enforce the rules. Use `git log` for the covered paths to find changes since the recorded review; a successful checker run does not establish correspondence by itself.
 
-1. Replay the path against the real code, one command per step, as a test. If the code does the same, it is a real bug: report it with the path. Do not weaken the rule, and do not change product code unless asked.
-2. If the code cannot take one of the steps, the model allows something the code forbids. Find the guard in the code, add it to the model, and say so in the pull request.
-3. If a broken variant stops failing, or fails on a different rule, the model changed so that the rule can no longer catch that break. Treat that as a failure of the model.
+Covered paths are `spec/`, `proofs/`, `src/domain/types.ts`, `src/domain/graph.ts`, `src/domain/lifecycle.ts`, `src/domain/requests.ts`, `src/domain/task-state.ts`, `src/domain/views.ts`, `src/db/tasks.ts`, `src/cli/main.ts`, `migrations/` and their domain/CLI tests.
 
-For Lean, a failed build names the line. A message about `#guard_msgs` means a theorem's axioms changed; `sorryAx` in the list means a proof is unfinished.
+## Read a result
 
-## Changing the model on purpose
+Use the public pstack `/statechart` skill when available to read each TLC result. A violated invariant is a shortest sequence of actions that reaches a bad state. For a passing bounded model, the same skill can draw the allowed state transitions. The raw output is sufficient when that optional tool is absent.
 
-- Change `spec/TaskLifecycle.tla` first, then make the same change in each file in `spec/broken/`, keeping only its one removed guard. `check.sh` fails if a variant drifts more than a few lines from the model.
-- A new rule needs a new broken variant that fails on it, a line in `spec/broken/EXPECTED.json`, and a row in `spec/README.md`.
-- If the cycle check in the code changes shape, change `addDep_ok` in `proofs/CycleCheck.lean` to match and prove `addDep_ok_iff` again. The property test in TypeScript must compare against the same definition.
-- Run the one command, then update the commit in "Covered code".
+Find `Error: Invariant <name> is violated.` and read the numbered states below it. Each header names the action that led to that state. Compare the variables with the prior state, then translate each action into one CLI command:
+
+- `Add`, `AddDep` and `RemoveDep` mean `add`, `dep add` and `dep rm`.
+- `SetStatus` and `Reopen` mean a status change and `status` with `reopen:true`.
+- `AskNext` means `next`; `offered` is the proposed work.
+- `deps` contains task/prerequisite pairs. `replayed` is the state reconstructed from history.
+
+The broken cycle variant allows a dependency loop. The broken next variant offers a task before its prerequisite is done. The broken status variant overwrites a done state. The broken removal variant changes an edge without logging it. CLI regression tests replay the relevant sequences against the actual binary.
+
+The TypeScript cycle property was also checked against a scratch copy with the `addDep` cycle guard removed. It failed on a one-node self-loop; the unchanged implementation passed all 10,000 generated graphs afterward. Repeat this negative check in an isolated scratch copy when changing the proof-to-code bridge, preserving the failed output and deleting only the scratch sources.
+
+For a failure, preserve the output and replay the trace against the implementation. If the code cannot take a modeled step, identify the guard or assumption that differs before changing the model. If the code takes the steps and violates the promise, fix the implementation rather than weakening the promise. A deliberate model change needs a corresponding implementation change and a broken variant that demonstrates detection.
+
+For Lean, the error names the failing theorem or axiom guard. A toolchain upgrade may need proof syntax updates, but theorem statements, definitions and guarded assumptions must retain their meaning. Rerun both formal checks and the implementation tests after such an upgrade.

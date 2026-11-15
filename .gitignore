@@ -3,3 +3,5 @@ dist/
 proofs/.lake/
 spec/states/
 *_TTrace_*
+.build/
+release/

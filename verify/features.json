@@ -1,0 +1,117 @@
+[
+  {
+    "id": "build",
+    "userVisible": "The module builds into one executable file that needs only Node.",
+    "check": "npm run build"
+  },
+  {
+    "id": "commands",
+    "userVisible": "A caller can discover every command and whether it reads or writes data.",
+    "check": "node scripts/verify-feature.mjs commands"
+  },
+  {
+    "id": "selfcheck",
+    "userVisible": "Startup checks report runtime, binary checksum, database integrity and migrations.",
+    "check": "node scripts/verify-feature.mjs selfcheck"
+  },
+  {
+    "id": "add",
+    "userVisible": "Creating a task can be retried without creating duplicate work.",
+    "check": "node scripts/verify-feature.mjs add"
+  },
+  {
+    "id": "update",
+    "userVisible": "Task details can be changed while retries preserve the original answer.",
+    "check": "node scripts/verify-feature.mjs update"
+  },
+  {
+    "id": "status",
+    "userVisible": "Finished work changes status only through an explicit reopen.",
+    "check": "node scripts/verify-feature.mjs status"
+  },
+  {
+    "id": "dep-add",
+    "userVisible": "Adding a prerequisite refuses cycles and missing tasks.",
+    "check": "node scripts/verify-feature.mjs dep-add"
+  },
+  {
+    "id": "dep-rm",
+    "userVisible": "Removing a prerequisite makes the newly available work visible.",
+    "check": "node scripts/verify-feature.mjs dep-rm"
+  },
+  {
+    "id": "get",
+    "userVisible": "A caller can retrieve one existing task and recognize a missing task.",
+    "check": "node scripts/verify-feature.mjs get"
+  },
+  {
+    "id": "list",
+    "userVisible": "A caller can filter tasks by list, status and label.",
+    "check": "node scripts/verify-feature.mjs list"
+  },
+  {
+    "id": "import",
+    "userVisible": "Importing a work list twice is unchanged, and invalid imports store nothing.",
+    "check": "node scripts/verify-feature.mjs import"
+  },
+  {
+    "id": "next",
+    "userVisible": "Next work has completed prerequisites and a repeatable explained ordering.",
+    "check": "node scripts/verify-feature.mjs next"
+  },
+  {
+    "id": "graph",
+    "userVisible": "The task graph reports dependencies, estimated effort and the critical path.",
+    "check": "node scripts/verify-feature.mjs graph"
+  },
+  {
+    "id": "board",
+    "userVisible": "Board data groups every task into its current status.",
+    "check": "node scripts/verify-feature.mjs board"
+  },
+  {
+    "id": "history",
+    "userVisible": "Task history records edits, actors and status notes in order.",
+    "check": "node scripts/verify-feature.mjs history"
+  },
+  {
+    "id": "rebuild",
+    "userVisible": "Rebuilding task tables from history preserves the current work and dependencies.",
+    "check": "node scripts/verify-feature.mjs rebuild"
+  },
+  {
+    "id": "process-metrics",
+    "userVisible": "Read-only metrics measure waiting, cycle time and throughput from history.",
+    "check": "node scripts/verify-feature.mjs process-metrics"
+  },
+  {
+    "id": "process-simulate",
+    "userVisible": "Seeded simulations compare finish dates without changing stored tasks.",
+    "check": "node scripts/verify-feature.mjs process-simulate"
+  },
+  {
+    "id": "schedule-suggest",
+    "userVisible": "Read-only scheduling respects dependencies, availability and capacity.",
+    "check": "node scripts/verify-feature.mjs schedule-suggest"
+  },
+  {
+    "id": "schedule-check",
+    "userVisible": "An independent checker reports conflicting assignments without changing tasks.",
+    "check": "node scripts/verify-feature.mjs schedule-check"
+  },
+  {
+    "id": "contract",
+    "userVisible": "The module follows the shared JSON, exit-code, deterministic and read-only contract.",
+    "check": "npm run contract"
+  },
+  {
+    "id": "standalone",
+    "userVisible": "Repository documentation and examples can be understood without private context.",
+    "check": "npm run check:standalone"
+  },
+  {
+    "id": "models",
+    "userVisible": "The lifecycle model passes and deliberately broken variants fail their named invariants.",
+    "check": "npm run tlc"
+  }
+]
