@@ -7,10 +7,10 @@ import {
 } from "../db/tasks.ts";
 import { parseMetrics, parseSimulation } from "../domain/process-input.ts";
 import { processMetrics, simulate } from "../domain/process.ts";
-import { inputError, parseAdd, parseDep, parseEmpty, parseFilter, parseId, parseImport, parseListScope, parseNext, parseStatus, parseUpdate } from "../domain/requests.ts";
+import { inputError, parseAdd, parseCounts, parseDep, parseEmpty, parseFilter, parseId, parseImport, parseListScope, parseNext, parseStatus, parseUpdate } from "../domain/requests.ts";
 import { parseScheduleCheck, parseScheduleSuggest } from "../domain/schedule-input.ts";
 import { checkSchedule, suggestSchedule } from "../domain/schedule.ts";
-import { boardView, graphView, nextTasks } from "../domain/views.ts";
+import { boardView, graphView, nextTasks, taskCounts } from "../domain/views.ts";
 import { runModule } from "./shell.ts";
 
 const readTasks = <Input>(spec: {
@@ -33,6 +33,7 @@ await runModule({
     next: readTasks({ input: parseNext, run: ({ db, input, clock }) => nextTasks(listTasks(db), loadGraph(db), clock.now().toISOString(), input) }),
     graph: readTasks({ input: parseListScope, run: ({ db, input }) => graphView(listTasks(db), loadGraph(db), input.list) }),
     board: readTasks({ input: parseFilter, run: ({ db, input }) => boardView(listTasks(db, input)) }),
+    counts: readTasks({ input: parseCounts, run: ({ db, input, clock }) => taskCounts(listTasks(db), processEvents(db), clock.now().toISOString(), input.list) }),
     history: readTasks({ input: parseId, run: ({ db, input }) => ({ events: history(db, input.id) }) }),
     rebuild: writeCommand({ input: parseEmpty, run: ({ db }) => rebuild(db) }),
     "process metrics": readTasks({ input: parseMetrics, run: ({ db, input, clock }) => {

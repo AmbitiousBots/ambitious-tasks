@@ -165,6 +165,13 @@ export const parseListScope = (raw: unknown): { readonly list?: string } => {
   return input.list === undefined ? {} : { list: textInput(input.list, "list") };
 };
 
+export type CountsInput = { readonly list: string };
+
+export const parseCounts = (raw: unknown): CountsInput => {
+  const input = objectInput(raw, ["list"]);
+  return { list: textInput(input.list, "list") };
+};
+
 export type NextInput = { readonly list?: string; readonly assignee?: string; readonly limit: number };
 
 export const parseNext = (raw: unknown): NextInput => {

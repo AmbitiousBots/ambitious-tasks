@@ -30,7 +30,7 @@ verify/run --only import --only next --only graph
 
 `verify/features.json` is the maintained feature map. It covers command discovery, startup, every write and read command, import and replay, read-only process and schedule analysis, the shared contract, standalone documentation and the lifecycle model. Every command feature invokes `scripts/verify-feature.mjs`, which launches the real binary and asserts the observable result. The map is executable; `--list` shows the exact command for each feature.
 
-Each feature receives its own empty `AMBITIOUS_HOME`. Its fixture creation is part of the check. Import/next/graph checks use `test/fixtures/work-plan.json`; process checks create a timeline with known two-day waits and cycle times; schedule checks provide a bounded roster and independently check the suggested result. No default data directory is used.
+Each feature receives its own empty `AMBITIOUS_HOME`. Its fixture creation is part of the check. Import/next/graph checks use `test/fixtures/work-plan.json`; process checks create a timeline with known two-day waits and cycle times; the counts check places one task exactly seven days before the command time and one a millisecond inside that window; schedule checks provide a bounded roster and independently check the suggested result. No default data directory is used.
 
 For the full release gate, also run:
 
