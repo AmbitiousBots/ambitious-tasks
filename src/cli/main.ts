@@ -2,7 +2,7 @@ import { readCommand, writeCommand, type DbContext } from "@ambitious/kit/cli/co
 import { embedded } from "@ambitious/kit/cli/embedded";
 import type { JsonObject } from "@ambitious/kit/domain/json";
 import {
-  addTask, changeDependency, changeStatus, getTask, history, importTasks, listTasks,
+  addTask, changeDependency, changeStatus, getTask, history, importTasks, listTasks, listsEverUsed,
   loadGraph, loadPeople, processEvents, rebuild, taskWithDependencies, updateTask, withReadSnapshot,
 } from "../db/tasks.ts";
 import { parseMetrics, parseSimulation } from "../domain/process-input.ts";
@@ -33,7 +33,7 @@ await runModule({
     next: readTasks({ input: parseNext, run: ({ db, input, clock }) => nextTasks(listTasks(db), loadGraph(db), clock.now().toISOString(), input) }),
     graph: readTasks({ input: parseListScope, run: ({ db, input }) => graphView(listTasks(db), loadGraph(db), input.list) }),
     board: readTasks({ input: parseFilter, run: ({ db, input }) => boardView(listTasks(db, input)) }),
-    counts: readTasks({ input: parseCounts, run: ({ db, input, clock }) => taskCounts(listTasks(db), processEvents(db), clock.now().toISOString(), input.list) }),
+    counts: readTasks({ input: parseCounts, run: ({ db, input, clock }) => taskCounts(listTasks(db), processEvents(db), clock.now().toISOString(), input.list, listsEverUsed(db)) }),
     history: readTasks({ input: parseId, run: ({ db, input }) => ({ events: history(db, input.id) }) }),
     rebuild: writeCommand({ input: parseEmpty, run: ({ db }) => rebuild(db) }),
     "process metrics": readTasks({ input: parseMetrics, run: ({ db, input, clock }) => {
@@ -45,4 +45,4 @@ await runModule({
     "schedule suggest": readTasks({ input: parseScheduleSuggest, run: ({ db, input, clock }) => suggestSchedule(listTasks(db), loadGraph(db), loadPeople(db), clock.now().toISOString(), input) }),
     "schedule check": readTasks({ input: parseScheduleCheck, run: ({ db, input, clock }) => checkSchedule(listTasks(db), loadGraph(db), loadPeople(db), clock.now().toISOString(), input) }),
   },
-}, new Set(["list", "next", "graph", "board", "rebuild", "process metrics"]));
+}, new Set(["list", "next", "graph", "board", "counts", "rebuild", "process metrics"]));

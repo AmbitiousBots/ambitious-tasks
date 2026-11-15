@@ -2,11 +2,11 @@ import { failure } from "@ambitious/kit/domain/failure";
 import { checkGraph } from "./graph.ts";
 import { parseStatusChange } from "./lifecycle.ts";
 import type { ImportInput, TaskPatch } from "./requests.ts";
-import type { Graph, Task, TaskId } from "./types.ts";
+import { DEFAULT_LIST, type Graph, type Task, type TaskId } from "./types.ts";
 
 export const newTask = (input: TaskPatch & { readonly title: string }, id: TaskId, now: string): Task => ({
   id,
-  list: input.list ?? "default",
+  list: input.list ?? DEFAULT_LIST,
   title: input.title,
   status: "todo",
   priority: input.priority ?? 2,

@@ -282,6 +282,9 @@ export const processEvents = (db: Db): readonly ProcessEvent[] => allEvents(db).
   status: eventSnapshot(event).task.status,
 }));
 
+export const listsEverUsed = (db: Db): readonly string[] =>
+  [...new Set(allEvents(db).map((event) => eventSnapshot(event).task.list))].sort();
+
 export const rebuild = (db: Db): JsonObject => {
   const events = allEvents(db);
   const snapshots = new Map<TaskId, Snapshot>();

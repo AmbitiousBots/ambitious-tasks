@@ -153,6 +153,12 @@ const checks = {
   },
   counts: () => {
     const at = '2026-01-08T00:00:00Z';
+    ok('selfcheck');
+    assert.deepEqual(ok('counts', {}, at),
+      { list: 'default', exists: false, open: null, stale7d: null, blocked: null, waiting: null, done7d: null, asOf: '2026-01-08T00:00:00.000Z',
+        note: 'No task has ever been in the list "default", so there is nothing to count. No list has had a task yet.' });
+    add('unfiled');
+    ok('status', { id: 'unfiled', status: 'done' });
     add('old', { list: 'audit' });
     add('stuck', { list: 'audit' });
     add('paused', { list: 'audit' });
@@ -165,10 +171,13 @@ const checks = {
     ok('status', { id: 'dropped', status: 'canceled' }, '2026-01-05T00:00:00Z');
     const before = hashDb();
     assert.deepEqual(ok('counts', { list: 'audit' }, at),
-      { list: 'audit', open: 3, stale7d: 1, blocked: 1, waiting: 1, done7d: 1, asOf: '2026-01-08T00:00:00.000Z' });
+      { list: 'audit', exists: true, open: 3, stale7d: 1, blocked: 1, waiting: 1, done7d: 1, asOf: '2026-01-08T00:00:00.000Z' });
     assert.deepEqual(ok('counts', { list: 'absent' }, at),
-      { list: 'absent', open: 0, stale7d: 0, blocked: 0, waiting: 0, done7d: 0, asOf: '2026-01-08T00:00:00.000Z' });
-    refused('counts', {}, 'E_INPUT_SCHEMA');
+      { list: 'absent', exists: false, open: null, stale7d: null, blocked: null, waiting: null, done7d: null, asOf: '2026-01-08T00:00:00.000Z',
+        note: 'No task has ever been in the list "absent", so there is nothing to count. Lists that have had a task: "audit", "default", "other".' });
+    assert.deepEqual(ok('counts', {}, at),
+      { list: 'default', exists: true, open: 0, stale7d: 0, blocked: 0, waiting: 0, done7d: 0, asOf: '2026-01-08T00:00:00.000Z' });
+    refused('counts', { list: '' }, 'E_INPUT_SCHEMA');
     assert.equal(invoke('counts', { list: 'audit' }, at).stdout, invoke('counts', { list: 'audit' }, at).stdout);
     assert.equal(hashDb(), before);
   },

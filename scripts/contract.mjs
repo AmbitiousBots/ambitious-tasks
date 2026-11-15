@@ -7,7 +7,6 @@ const [binary = "dist/ambitious-tasks.mjs", ...extra] = process.argv.slice(2);
 if (extra.length > 0 || binary.startsWith("--")) throw new Error("Usage: node scripts/contract.mjs [built-module]");
 const fixtures = {
   get: { id: "contract-task" },
-  counts: { list: "contract-list" },
   history: { id: "contract-task" },
   "process simulate": { scenarios: [{ name: "baseline" }], runs: 1 },
   "schedule suggest": { people: [], horizon_days: 7 },

@@ -4,6 +4,8 @@ export type TaskId = string & { readonly [taskIdBrand]: true };
 
 export const isTaskId = (raw: string): raw is TaskId => raw.length > 0 && raw.trim() === raw;
 
+export const DEFAULT_LIST = "default";
+
 export const OPEN_STATUSES = ["todo", "in_progress", "blocked", "waiting"] as const;
 export const CLOSED_STATUSES = ["done", "canceled"] as const;
 
