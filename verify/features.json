@@ -70,6 +70,11 @@
     "check": "node scripts/verify-feature.mjs board"
   },
   {
+    "id": "counts",
+    "userVisible": "One read-only call reports open, stale, blocked, waiting and recently finished task totals for a list.",
+    "check": "node scripts/verify-feature.mjs counts"
+  },
+  {
     "id": "history",
     "userVisible": "Task history records edits, actors and status notes in order.",
     "check": "node scripts/verify-feature.mjs history"

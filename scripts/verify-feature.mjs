@@ -40,10 +40,10 @@ const people = [{ id: 'worker-1', name: 'Worker', capacity_days_per_week: 7, win
 const checks = {
   commands: () => {
     const result = ok('commands');
-    for (const name of ['add', 'update', 'status', 'dep add', 'dep rm', 'get', 'list', 'import', 'next', 'graph', 'board', 'history', 'rebuild', 'process metrics', 'process simulate', 'schedule suggest', 'schedule check', 'selfcheck', 'commands']) {
+    for (const name of ['add', 'update', 'status', 'dep add', 'dep rm', 'get', 'list', 'import', 'next', 'graph', 'board', 'counts', 'history', 'rebuild', 'process metrics', 'process simulate', 'schedule suggest', 'schedule check', 'selfcheck', 'commands']) {
       assert.ok(result.commands.some((entry) => entry.name === name), name);
     }
-    for (const name of ['process metrics', 'process simulate', 'schedule suggest', 'schedule check']) {
+    for (const name of ['counts', 'process metrics', 'process simulate', 'schedule suggest', 'schedule check']) {
       assert.equal(result.commands.find((entry) => entry.name === name).access, 'read');
     }
   },
@@ -150,6 +150,27 @@ const checks = {
     assert.deepEqual(columns.map(({ status }) => status), ['todo', 'in_progress', 'blocked', 'waiting', 'done', 'canceled']);
     assert.deepEqual(columns.find(({ status }) => status === 'todo').tasks.map(({ id }) => id), ['one']);
     assert.deepEqual(columns.find(({ status }) => status === 'done').tasks.map(({ id }) => id), ['two']);
+  },
+  counts: () => {
+    const at = '2026-01-08T00:00:00Z';
+    add('old', { list: 'audit' });
+    add('stuck', { list: 'audit' });
+    add('paused', { list: 'audit' });
+    add('finished', { list: 'audit' });
+    add('dropped', { list: 'audit' });
+    add('elsewhere', { list: 'other' });
+    ok('status', { id: 'stuck', status: 'blocked' }, '2026-01-01T00:00:00.001Z');
+    ok('status', { id: 'paused', status: 'waiting' }, '2026-01-05T00:00:00Z');
+    ok('status', { id: 'finished', status: 'done' }, '2026-01-05T00:00:00Z');
+    ok('status', { id: 'dropped', status: 'canceled' }, '2026-01-05T00:00:00Z');
+    const before = hashDb();
+    assert.deepEqual(ok('counts', { list: 'audit' }, at),
+      { list: 'audit', open: 3, stale7d: 1, blocked: 1, waiting: 1, done7d: 1, asOf: '2026-01-08T00:00:00.000Z' });
+    assert.deepEqual(ok('counts', { list: 'absent' }, at),
+      { list: 'absent', open: 0, stale7d: 0, blocked: 0, waiting: 0, done7d: 0, asOf: '2026-01-08T00:00:00.000Z' });
+    refused('counts', {}, 'E_INPUT_SCHEMA');
+    assert.equal(invoke('counts', { list: 'audit' }, at).stdout, invoke('counts', { list: 'audit' }, at).stdout);
+    assert.equal(hashDb(), before);
   },
   history: () => {
     add('one');

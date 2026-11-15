@@ -6,14 +6,14 @@ Part of [Ambitious](https://ambitiousbots.com). The shared [module contract](htt
 
 ## Run
 
-The release contains `ambitious-tasks-0.1.0.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
+The release contains `ambitious-tasks-0.1.1.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
 
 ```sh
 shasum -a 256 -c SHA256SUMS
 export AMBITIOUS_HOME="$(mktemp -d)"
-node ambitious-tasks-0.1.0.mjs selfcheck
-printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.0.mjs add
-node ambitious-tasks-0.1.0.mjs next --now 2026-01-01T00:00:00Z --seed 7
+node ambitious-tasks-0.1.1.mjs selfcheck
+printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.1.mjs add
+node ambitious-tasks-0.1.1.mjs next --now 2026-01-01T00:00:00Z --seed 7
 ```
 
 Choose a persistent `AMBITIOUS_HOME` for real work; the temporary directory above is for trying the commands. The default is `/workspace/ambitious`, the module storage directory on a Grok Bot computer. The database lives at `$AMBITIOUS_HOME/tasks/tasks.sqlite`; `--db` overrides that file. Modules refuse `/home/box/agent-data`, the bot's private state directory, including paths that reach it through symbolic links. These documented runtime paths are listed in `.standalone.json`.
@@ -44,6 +44,7 @@ Every response is one line with `{ ok, schemaVersion, module, command, data, err
 | `next` | read | `{list?, limit?:10, assignee?}` | `ranked` with id, title, score and reasons |
 | `graph` | read | `{list?}` | nodes, edges, critical_path, total_days, critical_path_days |
 | `board` | read | `{list?}` | `columns`, each with a status and tasks |
+| `counts` | read | `{list}` | `list`, `open`, `stale7d`, `blocked`, `waiting`, `done7d`, `asOf` |
 | `history` | read | `{id}` | ordered `events` |
 | `rebuild` | write | `{}` | counts of events replayed and tasks restored |
 | `process metrics` | read | `{list?, from?, to?}` | status wait times, cycle-time percentiles, throughput and bottlenecks |
@@ -76,6 +77,32 @@ The example dataset in `test/fixtures/work-plan.json` has 104 tasks and 105.5 es
 `next` excludes done and canceled tasks, then requires every prerequisite to be done, including prerequisites in other lists. Canceled prerequisites do not count as done. Ready tasks sort by membership in the remaining critical path, earlier due date, lower priority number, smaller estimate, then ascending ID. Missing due dates and estimates sort last. Reasons expose each factor and explicitly flag approval labels; ranking never grants approval.
 
 `graph.total_days` is the sum of estimates for selected tasks, including closed work. `critical_path_days` is the length of the longest dependency chain, which is a different number. Missing estimates contribute zero to these totals. A list-filtered graph reports selected nodes and their edges; the critical path includes the prerequisite closure so a prerequisite in another list is not silently ignored.
+
+### Counts
+
+`counts` returns the totals a status report needs for one list, so a caller never adds them up by hand. `list` is required and matches the task's list name exactly. A list with no tasks returns zero for every count; it is not an error. The command reads the database and changes nothing.
+
+```sh
+printf '%s\n' '{"list":"default"}' | node ambitious-tasks-0.1.1.mjs counts --now 2026-01-15T12:00:00Z
+```
+
+For a list with four open tasks, `data` looks like this:
+
+```json
+{"list":"default","open":4,"stale7d":1,"blocked":1,"waiting":1,"done7d":2,"asOf":"2026-01-15T12:00:00.000Z"}
+```
+
+| Field | Exact definition |
+|---|---|
+| `list` | The list name from the input. |
+| `open` | Tasks in the list whose status is `todo`, `in_progress`, `blocked` or `waiting`. Done and canceled tasks are not open. |
+| `stale7d` | Open tasks whose last change is 7 or more days before `asOf`. The last change is the task's `updated_at`: the time of its most recent stored event of any kind (creation, edit, status change, dependency change or import). A task changed exactly 7 days (604,800,000 milliseconds) before `asOf` is stale; one changed a millisecond later is not. |
+| `blocked` | Tasks in the list whose status is `blocked`. |
+| `waiting` | Tasks in the list whose status is `waiting`. |
+| `done7d` | Tasks in the list whose status is `done` and that were finished less than 7 days before `asOf`. The finish time is the most recent event that moved the task into `done`, so editing a task that was finished long ago does not count it again, while reopening and finishing it does. A task finished exactly 7 days before `asOf` is not counted. |
+| `asOf` | The time the windows were measured from, in UTC: `--now` when given, otherwise the current time. It equals `meta.now`. |
+
+`blocked` and `waiting` are both included in `open`, and a stale task is also counted in `open`. Canceled tasks appear in no count. The counts describe the stored tasks as they are when the command runs; `--now` moves only the two 7-day windows and does not rewind task statuses to an earlier time.
 
 ## Read-only analysis
 

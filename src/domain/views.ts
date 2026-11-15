@@ -1,6 +1,7 @@
 import { failure } from "@ambitious/kit/domain/failure";
 import { criticalPath, rank } from "./graph.ts";
-import { CLOSED_STATUSES, OPEN_STATUSES, type Graph, type Task, type TaskId } from "./types.ts";
+import type { ProcessEvent } from "./process.ts";
+import { CLOSED_STATUSES, OPEN_STATUSES, type Graph, type OpenStatus, type Task, type TaskId } from "./types.ts";
 
 export const nextTasks = (
   tasks: readonly Task[], graph: Graph, now: string, input: { readonly list?: string; readonly assignee?: string; readonly limit?: number },
@@ -43,3 +44,27 @@ export const graphView = (tasks: readonly Task[], graph: Graph, list?: string) =
 export const boardView = (tasks: readonly Task[]) => ({
   columns: [...OPEN_STATUSES, ...CLOSED_STATUSES].map((status) => ({ status, tasks: tasks.filter((task) => task.status === status) })),
 });
+
+const WEEK = 7 * 86_400_000;
+const isOpen = (status: Task["status"]): status is OpenStatus => OPEN_STATUSES.some((open) => open === status);
+
+export const taskCounts = (tasks: readonly Task[], events: readonly ProcessEvent[], now: string, list: string) => {
+  const weekAgo = Date.parse(now) - WEEK;
+  const completedAt = new Map<TaskId, string>();
+  const previous = new Map<TaskId, Task["status"]>();
+  for (const event of [...events].sort((a, b) => a.seq - b.seq)) {
+    if (event.status === "done" && previous.get(event.task_id) !== "done") completedAt.set(event.task_id, event.at);
+    previous.set(event.task_id, event.status);
+  }
+  const selected = tasks.filter((task) => task.list === list);
+  const open = selected.filter((task) => isOpen(task.status));
+  return {
+    list,
+    open: open.length,
+    stale7d: open.filter((task) => Date.parse(task.updated_at) <= weekAgo).length,
+    blocked: open.filter((task) => task.status === "blocked").length,
+    waiting: open.filter((task) => task.status === "waiting").length,
+    done7d: selected.filter((task) => task.status === "done" && Date.parse(completedAt.get(task.id) ?? task.updated_at) > weekAgo).length,
+    asOf: now,
+  };
+};
