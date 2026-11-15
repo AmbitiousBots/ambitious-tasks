@@ -71,7 +71,7 @@
   },
   {
     "id": "counts",
-    "userVisible": "One read-only call reports open, stale, blocked, waiting and recently finished task totals for a list.",
+    "userVisible": "One read-only call reports open, stale, blocked, waiting and recently finished task totals for a list, uses the default list when none is named, and says when a list has never had a task instead of reporting zeros.",
     "check": "node scripts/verify-feature.mjs counts"
   },
   {

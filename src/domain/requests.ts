@@ -1,7 +1,7 @@
 import { parseNow } from "@ambitious/kit/domain/clock";
 import { failure } from "@ambitious/kit/domain/failure";
 import { isRecord } from "@ambitious/kit/domain/json";
-import { isTaskId, type Priority, type Status, type TaskId } from "./types.ts";
+import { DEFAULT_LIST, isTaskId, type Priority, type Status, type TaskId } from "./types.ts";
 
 export const inputError = (message: string): never => {
   throw failure("E_INPUT_SCHEMA", message, "Use the documented fields and value types for this command.");
@@ -169,7 +169,7 @@ export type CountsInput = { readonly list: string };
 
 export const parseCounts = (raw: unknown): CountsInput => {
   const input = objectInput(raw, ["list"]);
-  return { list: textInput(input.list, "list") };
+  return { list: input.list === undefined ? DEFAULT_LIST : textInput(input.list, "list") };
 };
 
 export type NextInput = { readonly list?: string; readonly assignee?: string; readonly limit: number };

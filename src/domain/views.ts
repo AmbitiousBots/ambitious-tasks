@@ -48,7 +48,28 @@ export const boardView = (tasks: readonly Task[]) => ({
 const WEEK = 7 * 86_400_000;
 const isOpen = (status: Task["status"]): status is OpenStatus => OPEN_STATUSES.some((open) => open === status);
 
-export const taskCounts = (tasks: readonly Task[], events: readonly ProcessEvent[], now: string, list: string) => {
+export type TaskCounts =
+  | {
+    readonly list: string; readonly exists: true; readonly open: number; readonly stale7d: number;
+    readonly blocked: number; readonly waiting: number; readonly done7d: number; readonly asOf: string;
+  }
+  | {
+    readonly list: string; readonly exists: false; readonly open: null; readonly stale7d: null;
+    readonly blocked: null; readonly waiting: null; readonly done7d: null; readonly asOf: string; readonly note: string;
+  };
+
+export const taskCounts = (
+  tasks: readonly Task[], events: readonly ProcessEvent[], now: string, list: string, listsEverUsed: readonly string[],
+): TaskCounts => {
+  if (!listsEverUsed.includes(list)) {
+    const known = listsEverUsed.length === 0
+      ? "No list has had a task yet."
+      : `Lists that have had a task: ${listsEverUsed.map((name) => JSON.stringify(name)).join(", ")}.`;
+    return {
+      list, exists: false, open: null, stale7d: null, blocked: null, waiting: null, done7d: null, asOf: now,
+      note: `No task has ever been in the list ${JSON.stringify(list)}, so there is nothing to count. ${known}`,
+    };
+  }
   const weekAgo = Date.parse(now) - WEEK;
   const completedAt = new Map<TaskId, string>();
   const previous = new Map<TaskId, Task["status"]>();
@@ -60,6 +81,7 @@ export const taskCounts = (tasks: readonly Task[], events: readonly ProcessEvent
   const open = selected.filter((task) => isOpen(task.status));
   return {
     list,
+    exists: true,
     open: open.length,
     stale7d: open.filter((task) => Date.parse(task.updated_at) <= weekAgo).length,
     blocked: open.filter((task) => task.status === "blocked").length,
