@@ -11,8 +11,10 @@ export type OpenStatus = (typeof OPEN_STATUSES)[number];
 export type ClosedStatus = (typeof CLOSED_STATUSES)[number];
 export type Status = OpenStatus | ClosedStatus;
 
+type SetFrom = Exclude<Status, "done">;
+
 export type StatusChange =
-  | { readonly kind: "set"; readonly from: Exclude<Status, "done">; readonly to: Status }
+  | { readonly [From in SetFrom]: { readonly kind: "set"; readonly from: From; readonly to: Exclude<Status, From> } }[SetFrom]
   | { readonly kind: "reopen"; readonly from: "done"; readonly to: "todo" };
 
 export type Priority = 0 | 1 | 2 | 3;
