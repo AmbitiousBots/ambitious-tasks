@@ -36,9 +36,9 @@ The Lean proof uses a local membership instance that reads a finite set's underl
 
 ## Correspondence record
 
-The inherited formal baseline is commit `2a5bf988e9c126c83811af1ab1828a1460a9fbb3`. The implementation correspondence is the table above. When committing a changed implementation, record its reviewed commit here after verifying that the listed functions still enforce the rules. Use `git log` for the covered paths to find changes since the recorded review; a successful checker run does not establish correspondence by itself.
+The implementation correspondence was reviewed at commit `e7e99d6570818c844143c7256af1d533b22699bb`, after the full release check passed. The table above records the reviewed guards and transaction boundaries. When committing a changed implementation, record its reviewed commit here after verifying that the listed functions still enforce the rules. Use `git log` for the covered paths to find changes since the recorded review; a successful checker run does not establish correspondence by itself.
 
-Covered paths are `spec/`, `proofs/`, `src/domain/types.ts`, `src/domain/graph.ts`, `src/domain/lifecycle.ts`, `src/domain/requests.ts`, `src/db/tasks.ts`, `src/cli/main.ts`, `migrations/` and their domain/CLI tests.
+Covered paths are `spec/`, `proofs/`, `src/domain/types.ts`, `src/domain/graph.ts`, `src/domain/lifecycle.ts`, `src/domain/requests.ts`, `src/domain/task-state.ts`, `src/domain/views.ts`, `src/db/tasks.ts`, `src/cli/main.ts`, `migrations/` and their domain/CLI tests.
 
 ## Read a result
 
