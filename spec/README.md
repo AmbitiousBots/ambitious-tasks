@@ -6,7 +6,7 @@ Run everything with:
 
 ```sh
 bash spec/check.sh
-(cd proofs && lake exe cache get && lake build)
+(cd proofs && (lake exe cache get || true) && lake build)
 ```
 
 ## `TaskLifecycle.tla`: the model

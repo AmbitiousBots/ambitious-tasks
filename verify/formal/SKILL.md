@@ -25,10 +25,10 @@ Bounds: the model has four tasks, with no limit on the number of steps. The Lean
 From the repo root:
 
 ```sh
-bash spec/check.sh && (cd proofs && lake exe cache get && lake build)
+bash spec/check.sh && (cd proofs && (lake exe cache get || true) && lake build)
 ```
 
-`spec/check.sh` installs Java 21 through mise, downloads `tla2tools.jar` 1.8.0 into `~/.cache/ambitious/` and refuses it unless its SHA-256 matches the pinned value. It runs the model (must pass; about two minutes) and every variant in `spec/broken/` (each must fail on the rule named in `spec/broken/EXPECTED.json`). It ends with a line that starts `OK:`. `lake build` needs `elan`; it ends with `Build completed successfully`, and fails if any theorem depends on an axiom outside the list written next to it in `proofs/CycleCheck.lean`, which includes an unfinished proof.
+`spec/check.sh` installs Java 21 through mise, downloads `tla2tools.jar` 1.8.0 into `~/.cache/ambitious/` and refuses it unless its SHA-256 matches the pinned value. It runs the model (must pass; about two minutes) and every variant in `spec/broken/` (each must fail on the rule named in `spec/broken/EXPECTED.json`). It ends with a line that starts `OK:`. `lake exe cache get` downloads prebuilt Mathlib and only saves time, so its failure is ignored. `lake build` needs `elan`; it ends with `Build completed successfully`, and fails if any theorem depends on an axiom outside the list written next to it in `proofs/CycleCheck.lean`, which includes an unfinished proof.
 
 ## Covered code
 
@@ -49,7 +49,31 @@ One step in the model is one transaction in the code. If a write is ever split a
 
 ## Reading a result
 
-Read every TLC result with the pstack `/statechart` skill. Give it the `.tla` and `.cfg` that failed, in a scratch folder outside the repo. Its report gives the shortest path to the broken rule, one step per line.
+When a check fails, `spec/check.sh` prints TLC's full output. Find the line `Error: Invariant <Rule> is violated.`; the rule it names is the one that broke. Below it TLC prints the shortest path to the bad state as numbered states (shortened here):
+
+```
+Error: Invariant NextOnlyUnblocked is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ offered = {}
+/\ deps = {}
+/\ status = (t1 :> "absent" @@ t2 :> "absent" @@ t3 :> "absent" @@ t4 :> "absent")
+...
+
+State 2: <Add(t1) line 56, col 3 to line 60, col 19 of module NextIgnoresDeps>
+/\ offered = {}
+/\ deps = {}
+/\ status = (t1 :> "todo" @@ t2 :> "absent" @@ t3 :> "absent" @@ t4 :> "absent")
+...
+```
+
+Each `State N` header names the step that led to that state, and the lines under it give the value of every variable after the step. Read down the list and compare each state with the one before it: the variables that changed are what the step did. The last state is the one that breaks the rule. Write the path down as one command per line before deciding anything.
+
+To run one model by hand and keep the output, use the jar the script downloaded, from the repo root:
+
+```sh
+(cd spec/broken && mise exec -- java -cp ~/.cache/ambitious/tla2tools-1.8.0.jar tlc2.TLC -workers 1 -metadir "$(mktemp -d)" -noGenerateSpecTE -config NextIgnoresDeps.cfg NextIgnoresDeps.tla)
+```
 
 To tell the path in the tracker's words:
 
@@ -62,7 +86,7 @@ To tell the path in the tracker's words:
 
 Example, from `spec/broken/NextIgnoresDeps`: add t1, add t2, make t2 depend on t1, ask `next`; the answer includes t2 although t1 is still todo.
 
-When the model passes, `/statechart` reports the state count; the full chart is too large to draw at four tasks.
+When the model passes, the `PASS` line gives the number of distinct states TLC checked. `spec/check.sh` fails if that number is too small for the model to be exploring anything.
 
 ## Real bug or modeling error
 
