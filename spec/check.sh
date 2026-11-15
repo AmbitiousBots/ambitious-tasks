@@ -16,7 +16,11 @@ fail() {
 }
 
 sha256_of() {
-  shasum -a 256 "$1" | cut -d' ' -f1
+  if command -v sha256sum >/dev/null; then
+    sha256sum "$1" | cut -d' ' -f1
+  else
+    shasum -a 256 "$1" | cut -d' ' -f1
+  fi
 }
 
 fetch_tla_jar() {
