@@ -1,0 +1,5 @@
+node_modules/
+dist/
+proofs/.lake/
+spec/states/
+*_TTrace_*
