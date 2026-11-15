@@ -6,14 +6,14 @@ Part of [Ambitious](https://ambitiousbots.com). The shared [module contract](htt
 
 ## Run
 
-The release contains `ambitious-tasks-0.1.1.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
+The release contains `ambitious-tasks-0.1.2.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
 
 ```sh
 shasum -a 256 -c SHA256SUMS
 export AMBITIOUS_HOME="$(mktemp -d)"
-node ambitious-tasks-0.1.1.mjs selfcheck
-printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.1.mjs add
-node ambitious-tasks-0.1.1.mjs next --now 2026-01-01T00:00:00Z --seed 7
+node ambitious-tasks-0.1.2.mjs selfcheck
+printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.2.mjs add
+node ambitious-tasks-0.1.2.mjs next --now 2026-01-01T00:00:00Z --seed 7
 ```
 
 Choose a persistent `AMBITIOUS_HOME` for real work; the temporary directory above is for trying the commands. The default is `/workspace/ambitious`, the module storage directory on a Grok Bot computer. The database lives at `$AMBITIOUS_HOME/tasks/tasks.sqlite`; `--db` overrides that file. Modules refuse `/home/box/agent-data`, the bot's private state directory, including paths that reach it through symbolic links. These documented runtime paths are listed in `.standalone.json`.
@@ -44,7 +44,7 @@ Every response is one line with `{ ok, schemaVersion, module, command, data, err
 | `next` | read | `{list?, limit?:10, assignee?}` | `ranked` with id, title, score and reasons |
 | `graph` | read | `{list?}` | nodes, edges, critical_path, total_days, critical_path_days |
 | `board` | read | `{list?}` | `columns`, each with a status and tasks |
-| `counts` | read | `{list}` | `list`, `open`, `stale7d`, `blocked`, `waiting`, `done7d`, `asOf` |
+| `counts` | read | `{list?}` | `list`, `exists`, `open`, `stale7d`, `blocked`, `waiting`, `done7d`, `asOf`, and `note` when the list does not exist |
 | `history` | read | `{id}` | ordered `events` |
 | `rebuild` | write | `{}` | counts of events replayed and tasks restored |
 | `process metrics` | read | `{list?, from?, to?}` | status wait times, cycle-time percentiles, throughput and bottlenecks |
@@ -80,27 +80,37 @@ The example dataset in `test/fixtures/work-plan.json` has 104 tasks and 105.5 es
 
 ### Counts
 
-`counts` returns the totals a status report needs for one list, so a caller never adds them up by hand. `list` is required and matches the task's list name exactly. A list with no tasks returns zero for every count; it is not an error. The command reads the database and changes nothing.
+`counts` returns the totals a status report needs for one list, so a caller never adds them up by hand. `list` is optional and matches the task's list name exactly, including letter case. When `list` is left out, `counts` uses the list named `default`, which is the list `add` and `import` put a task in when the task names no list. `data.list` always states the list that was counted. The command reads the database and changes nothing.
+
+`data.exists` tells an empty list apart from a name that was never used. A list exists when at least one event in the task history records a task in that list. Lists are not created on their own: adding or importing a task into a list, or moving a task into it with `update`, is what makes it exist, and it keeps existing after its tasks are finished, canceled or moved to another list. When `exists` is `false`, every count is `null` rather than 0 and `data.note` names the lists that do exist, so a misspelled list name cannot be mistaken for a list with no open work. An unknown list is not an error; the command still succeeds.
 
 ```sh
-printf '%s\n' '{"list":"default"}' | node ambitious-tasks-0.1.1.mjs counts --now 2026-01-15T12:00:00Z
+printf '%s\n' '{"list":"default"}' | node ambitious-tasks-0.1.2.mjs counts --now 2026-01-15T12:00:00Z
 ```
 
 For a list with four open tasks, `data` looks like this:
 
 ```json
-{"list":"default","open":4,"stale7d":1,"blocked":1,"waiting":1,"done7d":2,"asOf":"2026-01-15T12:00:00.000Z"}
+{"list":"default","exists":true,"open":4,"stale7d":1,"blocked":1,"waiting":1,"done7d":2,"asOf":"2026-01-15T12:00:00.000Z"}
+```
+
+For a list name that no task has ever used, `data` looks like this:
+
+```json
+{"list":"defualt","exists":false,"open":null,"stale7d":null,"blocked":null,"waiting":null,"done7d":null,"asOf":"2026-01-15T12:00:00.000Z","note":"No task has ever been in the list \"defualt\", so there is nothing to count. Lists that have had a task: \"default\", \"review\"."}
 ```
 
 | Field | Exact definition |
 |---|---|
-| `list` | The list name from the input. |
+| `list` | The list that was counted: the list name from the input, or `default` when the input has no `list`. |
+| `exists` | `true` when at least one event in the task history records a task in this list, whatever the task's status then or now and wherever the task is now. `false` when no task has ever been in it; the five counts are then `null`. |
 | `open` | Tasks in the list whose status is `todo`, `in_progress`, `blocked` or `waiting`. Done and canceled tasks are not open. |
 | `stale7d` | Open tasks whose last change is 7 or more days before `asOf`. The last change is the task's `updated_at`: the time of its most recent stored event of any kind (creation, edit, status change, dependency change or import). A task changed exactly 7 days (604,800,000 milliseconds) before `asOf` is stale; one changed a millisecond later is not. |
 | `blocked` | Tasks in the list whose status is `blocked`. |
 | `waiting` | Tasks in the list whose status is `waiting`. |
 | `done7d` | Tasks in the list whose status is `done` and that were finished less than 7 days before `asOf`. The finish time is the most recent event that moved the task into `done`, so editing a task that was finished long ago does not count it again, while reopening and finishing it does. A task finished exactly 7 days before `asOf` is not counted. |
 | `asOf` | The time the windows were measured from, in UTC: `--now` when given, otherwise the current time. It equals `meta.now`. |
+| `note` | Present only when `exists` is `false`. A sentence that says no task has ever been in the list and names every list that exists, in sorted order, or says that no list has had a task yet. |
 
 `blocked` and `waiting` are both included in `open`, and a stale task is also counted in `open`. Canceled tasks appear in no count. The counts describe the stored tasks as they are when the command runs; `--now` moves only the two 7-day windows and does not rewind task statuses to an earlier time.
 
@@ -129,7 +139,7 @@ npm audit
 
 `release:check` runs types, lint and standalone wording, import boundaries, unit/property and CLI tests, the shared contract tests, TLA+/TLC, Lean, feature verification and release packaging. `release:build` creates the single executable and checksum file in ignored `release/`. `verify/run --doctor`, `--list` and `--only <feature>` support targeted verification. Each feature uses a fresh `AMBITIOUS_HOME`, removes its test database afterward and retains its log.
 
-The kit 0.1.1 read-only contract probe sends an empty object to every command. Commands such as `get` need a valid ID before opening a database. `scripts/contract.mjs` supplies valid command-specific inputs to that probe while preserving every shared assertion and testing the actual executable. The adapter fails if the upstream probe changes. A mutation test confirms that the adapted suite rejects a binary that opens analysis databases for writing. Vendored packages remain unchanged.
+The kit 0.1.1 read-only contract probe sends an empty object to every command. Commands such as `get` need a valid ID before opening a database; `counts` accepts the empty object as is. `scripts/contract.mjs` supplies valid command-specific inputs to that probe while preserving every shared assertion and testing the actual executable. The adapter fails if the upstream probe changes. A mutation test confirms that the adapted suite rejects a binary that opens analysis databases for writing. Vendored packages remain unchanged.
 
 The TLA+ lifecycle model checks four tasks and the ordering invariants described in [spec/README.md](spec/README.md). Deliberately broken variants must fail their named invariants. Lean proves the reachability-based cycle check and next-task soundness for arbitrary graph sizes. Property tests compare the TypeScript cycle check with a brute-force evaluator on 10,000 generated graphs and check event replay against observed task state. Formal checks cover the stated models and assumptions, not every implementation detail. See [verify/formal/SKILL.md](verify/formal/SKILL.md) for the correspondence.
 
