@@ -146,7 +146,7 @@ const runTlc = ({ jar, java }, model, scratch) => {
   if (result.error !== undefined) throw new ToolchainError(`Cannot start Java at ${java}: ${result.error.message}`);
   const output = `${result.stdout}${result.stderr}`;
   const broken = output.match(/^Error: Invariant (\S+) is violated\.$/m)?.[1];
-  const states = output.match(/(\d+) distinct states? found/)?.[1];
+  const states = [...output.matchAll(/([\d,]+) distinct states? found/g)].at(-1)?.[1];
   if (result.status === 0 && output.includes("Model checking completed. No error has been found.")) {
     return { kind: "held", did: `found no error in ${states} states`, output };
   }
