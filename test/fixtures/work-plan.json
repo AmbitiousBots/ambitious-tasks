@@ -1,0 +1,1114 @@
+{
+  "schemaVersion": 2,
+  "tasks": [
+    {
+      "id": "task-001",
+      "title": "Complete work item 001",
+      "phase": "phase-01",
+      "depends_on": [],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 001 passes.",
+      "status": "done"
+    },
+    {
+      "id": "task-002",
+      "title": "Complete work item 002",
+      "phase": "phase-01",
+      "depends_on": [
+        "task-001"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 002 passes.",
+      "status": "done"
+    },
+    {
+      "id": "task-003",
+      "title": "Complete work item 003",
+      "phase": "phase-01",
+      "depends_on": [],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 003 passes."
+    },
+    {
+      "id": "task-004",
+      "title": "Complete work item 004",
+      "phase": "phase-01",
+      "depends_on": [
+        "task-002",
+        "task-003"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 004 passes."
+    },
+    {
+      "id": "task-005",
+      "title": "Complete work item 005",
+      "phase": "phase-01",
+      "depends_on": [
+        "task-004"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 005 passes."
+    },
+    {
+      "id": "task-006",
+      "title": "Complete work item 006",
+      "phase": "phase-01",
+      "depends_on": [
+        "task-007",
+        "task-005"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 006 passes."
+    },
+    {
+      "id": "task-007",
+      "title": "Complete work item 007",
+      "phase": "phase-01",
+      "depends_on": [
+        "task-004"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 007 passes."
+    },
+    {
+      "id": "task-008",
+      "title": "Complete work item 008",
+      "phase": "phase-01",
+      "depends_on": [
+        "task-003",
+        "task-005"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 008 passes."
+    },
+    {
+      "id": "task-009",
+      "title": "Complete work item 009",
+      "phase": "phase-01",
+      "depends_on": [],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 009 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-010",
+      "title": "Complete work item 010",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-008"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 010 passes."
+    },
+    {
+      "id": "task-011",
+      "title": "Complete work item 011",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 011 passes."
+    },
+    {
+      "id": "task-012",
+      "title": "Complete work item 012",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-010"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 012 passes."
+    },
+    {
+      "id": "task-013",
+      "title": "Complete work item 013",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-010"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 013 passes."
+    },
+    {
+      "id": "task-014",
+      "title": "Complete work item 014",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-013",
+        "task-011"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 014 passes."
+    },
+    {
+      "id": "task-015",
+      "title": "Complete work item 015",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-012",
+        "task-014"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 015 passes."
+    },
+    {
+      "id": "task-016",
+      "title": "Complete work item 016",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-011",
+        "task-015"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 016 passes."
+    },
+    {
+      "id": "task-017",
+      "title": "Complete work item 017",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-013"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 017 passes."
+    },
+    {
+      "id": "task-018",
+      "title": "Complete work item 018",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-015"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 018 passes."
+    },
+    {
+      "id": "task-019",
+      "title": "Complete work item 019",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-018"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 019 passes."
+    },
+    {
+      "id": "task-020",
+      "title": "Complete work item 020",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-015"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 020 passes."
+    },
+    {
+      "id": "task-021",
+      "title": "Complete work item 021",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-020",
+        "task-018"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 021 passes."
+    },
+    {
+      "id": "task-022",
+      "title": "Complete work item 022",
+      "phase": "phase-02",
+      "depends_on": [
+        "task-021"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 022 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-023",
+      "title": "Complete work item 023",
+      "phase": "phase-03",
+      "depends_on": [
+        "task-020"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 023 passes."
+    },
+    {
+      "id": "task-024",
+      "title": "Complete work item 024",
+      "phase": "phase-03",
+      "depends_on": [
+        "task-023"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 024 passes."
+    },
+    {
+      "id": "task-025",
+      "title": "Complete work item 025",
+      "phase": "phase-03",
+      "depends_on": [
+        "task-003"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 025 passes."
+    },
+    {
+      "id": "task-026",
+      "title": "Complete work item 026",
+      "phase": "phase-03",
+      "depends_on": [
+        "task-025"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 026 passes."
+    },
+    {
+      "id": "task-027",
+      "title": "Complete work item 027",
+      "phase": "phase-03",
+      "depends_on": [
+        "task-015",
+        "task-025"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 027 passes."
+    },
+    {
+      "id": "task-028",
+      "title": "Complete work item 028",
+      "phase": "phase-03",
+      "depends_on": [
+        "task-026"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 028 passes."
+    },
+    {
+      "id": "task-029",
+      "title": "Complete work item 029",
+      "phase": "phase-03",
+      "depends_on": [
+        "task-027",
+        "task-028"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 029 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-030",
+      "title": "Complete work item 030",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-008"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 030 passes."
+    },
+    {
+      "id": "task-031",
+      "title": "Complete work item 031",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-030",
+        "task-026"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 031 passes."
+    },
+    {
+      "id": "task-032",
+      "title": "Complete work item 032",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-030"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 032 passes."
+    },
+    {
+      "id": "task-033",
+      "title": "Complete work item 033",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-032"
+      ],
+      "estimate_days": 2,
+      "done_when": "Acceptance check 033 passes."
+    },
+    {
+      "id": "task-034",
+      "title": "Complete work item 034",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-033"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 034 passes."
+    },
+    {
+      "id": "task-035",
+      "title": "Complete work item 035",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-034"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 035 passes."
+    },
+    {
+      "id": "task-036",
+      "title": "Complete work item 036",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-034"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 036 passes."
+    },
+    {
+      "id": "task-037",
+      "title": "Complete work item 037",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-030"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 037 passes."
+    },
+    {
+      "id": "task-038",
+      "title": "Complete work item 038",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-026"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 038 passes."
+    },
+    {
+      "id": "task-039",
+      "title": "Complete work item 039",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 039 passes."
+    },
+    {
+      "id": "task-040",
+      "title": "Complete work item 040",
+      "phase": "phase-04",
+      "depends_on": [
+        "task-039",
+        "task-036"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 040 passes."
+    },
+    {
+      "id": "task-041",
+      "title": "Complete work item 041",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-002"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 041 passes.",
+      "status": "done"
+    },
+    {
+      "id": "task-042",
+      "title": "Complete work item 042",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-041",
+        "task-009"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 042 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-043",
+      "title": "Complete work item 043",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-042",
+        "task-005"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 043 passes."
+    },
+    {
+      "id": "task-044",
+      "title": "Complete work item 044",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-042"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 044 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-045",
+      "title": "Complete work item 045",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-044",
+        "task-046"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 045 passes."
+    },
+    {
+      "id": "task-046",
+      "title": "Complete work item 046",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 046 passes."
+    },
+    {
+      "id": "task-047",
+      "title": "Complete work item 047",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-045",
+        "task-043"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 047 passes."
+    },
+    {
+      "id": "task-048",
+      "title": "Complete work item 048",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-042"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 048 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-049",
+      "title": "Complete work item 049",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-047",
+        "task-048",
+        "task-030"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 049 passes."
+    },
+    {
+      "id": "task-050",
+      "title": "Complete work item 050",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 050 passes."
+    },
+    {
+      "id": "task-051",
+      "title": "Complete work item 051",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-042"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 051 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-052",
+      "title": "Complete work item 052",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-044",
+        "task-051",
+        "task-050"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 052 passes."
+    },
+    {
+      "id": "task-053",
+      "title": "Complete work item 053",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-047",
+        "task-049",
+        "task-052"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 053 passes."
+    },
+    {
+      "id": "task-054",
+      "title": "Complete work item 054",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-053"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 054 passes."
+    },
+    {
+      "id": "task-055",
+      "title": "Complete work item 055",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-053"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 055 passes."
+    },
+    {
+      "id": "task-056",
+      "title": "Complete work item 056",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-053"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 056 passes."
+    },
+    {
+      "id": "task-057",
+      "title": "Complete work item 057",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-049",
+        "task-036",
+        "task-037",
+        "task-029"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 057 passes."
+    },
+    {
+      "id": "task-058",
+      "title": "Complete work item 058",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-055",
+        "task-056",
+        "task-057"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 058 passes."
+    },
+    {
+      "id": "task-059",
+      "title": "Complete work item 059",
+      "phase": "phase-05",
+      "depends_on": [
+        "task-046",
+        "task-050",
+        "task-053"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 059 passes."
+    },
+    {
+      "id": "task-060",
+      "title": "Complete work item 060",
+      "phase": "phase-06",
+      "depends_on": [
+        "task-044"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 060 passes."
+    },
+    {
+      "id": "task-061",
+      "title": "Complete work item 061",
+      "phase": "phase-06",
+      "depends_on": [
+        "task-060",
+        "task-054"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 061 passes."
+    },
+    {
+      "id": "task-062",
+      "title": "Complete work item 062",
+      "phase": "phase-06",
+      "depends_on": [
+        "task-060",
+        "task-063"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 062 passes."
+    },
+    {
+      "id": "task-063",
+      "title": "Complete work item 063",
+      "phase": "phase-06",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 063 passes."
+    },
+    {
+      "id": "task-064",
+      "title": "Complete work item 064",
+      "phase": "phase-06",
+      "depends_on": [
+        "task-062",
+        "task-049"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 064 passes."
+    },
+    {
+      "id": "task-065",
+      "title": "Complete work item 065",
+      "phase": "phase-06",
+      "depends_on": [
+        "task-064"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 065 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-066",
+      "title": "Complete work item 066",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-008"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 066 passes."
+    },
+    {
+      "id": "task-067",
+      "title": "Complete work item 067",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 067 passes."
+    },
+    {
+      "id": "task-068",
+      "title": "Complete work item 068",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-066"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 068 passes."
+    },
+    {
+      "id": "task-069",
+      "title": "Complete work item 069",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-066"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 069 passes."
+    },
+    {
+      "id": "task-070",
+      "title": "Complete work item 070",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-068",
+        "task-014"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 070 passes."
+    },
+    {
+      "id": "task-071",
+      "title": "Complete work item 071",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-069"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 071 passes."
+    },
+    {
+      "id": "task-072",
+      "title": "Complete work item 072",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-067",
+        "task-069"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 072 passes."
+    },
+    {
+      "id": "task-073",
+      "title": "Complete work item 073",
+      "phase": "phase-07",
+      "depends_on": [
+        "task-070",
+        "task-071"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 073 passes."
+    },
+    {
+      "id": "task-074",
+      "title": "Complete work item 074",
+      "phase": "phase-08",
+      "depends_on": [
+        "task-008"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 074 passes."
+    },
+    {
+      "id": "task-075",
+      "title": "Complete work item 075",
+      "phase": "phase-08",
+      "depends_on": [
+        "task-074"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 075 passes."
+    },
+    {
+      "id": "task-076",
+      "title": "Complete work item 076",
+      "phase": "phase-08",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 076 passes."
+    },
+    {
+      "id": "task-077",
+      "title": "Complete work item 077",
+      "phase": "phase-08",
+      "depends_on": [
+        "task-075",
+        "task-076",
+        "task-014",
+        "task-070"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 077 passes."
+    },
+    {
+      "id": "task-078",
+      "title": "Complete work item 078",
+      "phase": "phase-08",
+      "depends_on": [
+        "task-077"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 078 passes."
+    },
+    {
+      "id": "task-079",
+      "title": "Complete work item 079",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-008"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 079 passes."
+    },
+    {
+      "id": "task-080",
+      "title": "Complete work item 080",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-079"
+      ],
+      "estimate_days": 2.5,
+      "done_when": "Acceptance check 080 passes."
+    },
+    {
+      "id": "task-081",
+      "title": "Complete work item 081",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-080"
+      ],
+      "estimate_days": 1.5,
+      "done_when": "Acceptance check 081 passes."
+    },
+    {
+      "id": "task-082",
+      "title": "Complete work item 082",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 082 passes."
+    },
+    {
+      "id": "task-083",
+      "title": "Complete work item 083",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-081"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 083 passes."
+    },
+    {
+      "id": "task-084",
+      "title": "Complete work item 084",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-008"
+      ],
+      "estimate_days": 2,
+      "done_when": "Acceptance check 084 passes."
+    },
+    {
+      "id": "task-085",
+      "title": "Complete work item 085",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-007"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 085 passes."
+    },
+    {
+      "id": "task-086",
+      "title": "Complete work item 086",
+      "phase": "phase-09",
+      "depends_on": [
+        "task-015"
+      ],
+      "estimate_days": 2,
+      "done_when": "Acceptance check 086 passes."
+    },
+    {
+      "id": "task-087",
+      "title": "Complete work item 087",
+      "phase": "phase-10",
+      "depends_on": [
+        "task-015",
+        "task-070",
+        "task-077",
+        "task-084"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 087 passes."
+    },
+    {
+      "id": "task-088",
+      "title": "Complete work item 088",
+      "phase": "phase-10",
+      "depends_on": [
+        "task-087"
+      ],
+      "estimate_days": 2,
+      "done_when": "Acceptance check 088 passes."
+    },
+    {
+      "id": "task-089",
+      "title": "Complete work item 089",
+      "phase": "phase-10",
+      "depends_on": [
+        "task-088"
+      ],
+      "estimate_days": 5,
+      "done_when": "Acceptance check 089 passes."
+    },
+    {
+      "id": "task-090",
+      "title": "Complete work item 090",
+      "phase": "phase-10",
+      "depends_on": [
+        "task-089"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 090 passes."
+    },
+    {
+      "id": "task-091",
+      "title": "Complete work item 091",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-042"
+      ],
+      "estimate_days": 2,
+      "done_when": "Acceptance check 091 passes."
+    },
+    {
+      "id": "task-092",
+      "title": "Complete work item 092",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-091",
+        "task-060"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 092 passes."
+    },
+    {
+      "id": "task-093",
+      "title": "Complete work item 093",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-092",
+        "task-061"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 093 passes."
+    },
+    {
+      "id": "task-094",
+      "title": "Complete work item 094",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-090",
+        "task-091"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 094 passes."
+    },
+    {
+      "id": "task-095",
+      "title": "Complete work item 095",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-091"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 095 passes."
+    },
+    {
+      "id": "task-096",
+      "title": "Complete work item 096",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-058"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 096 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-097",
+      "title": "Complete work item 097",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-058",
+        "task-096"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 097 passes."
+    },
+    {
+      "id": "task-098",
+      "title": "Complete work item 098",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-029",
+        "task-058",
+        "task-064",
+        "task-096",
+        "task-054"
+      ],
+      "estimate_days": 10,
+      "done_when": "Acceptance check 098 passes."
+    },
+    {
+      "id": "task-099",
+      "title": "Complete work item 099",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-058",
+        "task-022"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 099 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-100",
+      "title": "Complete work item 100",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-093",
+        "task-095",
+        "task-099"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 100 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-101",
+      "title": "Complete work item 101",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-098"
+      ],
+      "estimate_days": 0.25,
+      "done_when": "Acceptance check 101 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-102",
+      "title": "Complete work item 102",
+      "phase": "phase-11",
+      "depends_on": [
+        "task-098",
+        "task-100",
+        "task-101",
+        "task-065"
+      ],
+      "estimate_days": 1,
+      "done_when": "Acceptance check 102 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-103",
+      "title": "Complete work item 103",
+      "phase": "phase-12",
+      "depends_on": [
+        "task-059",
+        "task-016",
+        "task-040",
+        "task-072"
+      ],
+      "estimate_days": 0.5,
+      "done_when": "Acceptance check 103 passes.",
+      "needs_go_ahead": "owner approval"
+    },
+    {
+      "id": "task-104",
+      "title": "Complete work item 104",
+      "phase": "phase-12",
+      "depends_on": [
+        "task-015",
+        "task-098"
+      ],
+      "estimate_days": 2,
+      "done_when": "Acceptance check 104 passes."
+    }
+  ]
+}
