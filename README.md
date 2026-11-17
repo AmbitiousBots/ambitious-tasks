@@ -2,7 +2,7 @@
 
 Ambitious Tasks is a persistent command-line task tracker for bots. It stores tasks, prerequisites and append-only history in SQLite. It suggests available work, reports the critical path, measures process times, simulates finish dates and checks proposed schedules. Every command reads JSON and returns one JSON envelope. There is no user interface, document rendering, network access or AI key requirement.
 
-Part of [Ambitious](https://ambitiousbots.com). The shared [module contract](https://github.com/AmbitiousBots/ambitious-kit/blob/kit-v0.1.1/MODULE_CONTRACT.md) defines the envelope, installation, database and runtime rules.
+Part of [Ambitious](https://ambitiousbots.com). The shared [module contract](https://github.com/AmbitiousBots/ambitious-kit/blob/kit-v0.3.2/MODULE_CONTRACT.md) defines the envelope, installation, database and runtime rules.
 
 ## Run
 
@@ -139,7 +139,7 @@ npm audit
 
 `release:check` runs types, lint and standalone wording, import boundaries, unit/property and CLI tests, the shared contract tests, TLA+/TLC, Lean, feature verification and release packaging. `release:build` creates the single executable and checksum file in ignored `release/`. `verify/run --doctor`, `--list` and `--only <feature>` support targeted verification. Each feature uses a fresh `AMBITIOUS_HOME`, removes its test database afterward and retains its log.
 
-The kit 0.1.1 read-only contract probe sends an empty object to every command. Commands such as `get` need a valid ID before opening a database; `counts` accepts the empty object as is. `scripts/contract.mjs` supplies valid command-specific inputs to that probe while preserving every shared assertion and testing the actual executable. The adapter fails if the upstream probe changes. A mutation test confirms that the adapted suite rejects a binary that opens analysis databases for writing. Vendored packages remain unchanged.
+The kit 0.3.2 read-only contract probe sends an empty object to every command. Commands such as `get` need a valid ID before opening a database; `counts` accepts the empty object as is. `scripts/contract.mjs` supplies valid command-specific inputs to that probe while preserving every shared assertion and testing the actual executable. The adapter fails if the upstream probe changes. A mutation test confirms that the adapted suite rejects a binary that opens analysis databases for writing. Vendored packages remain unchanged.
 
 The TLA+ lifecycle model checks four tasks and the ordering invariants described in [spec/README.md](spec/README.md). Deliberately broken variants must fail their named invariants. Lean proves the reachability-based cycle check and next-task soundness for arbitrary graph sizes. Property tests compare the TypeScript cycle check with a brute-force evaluator on 10,000 generated graphs and check event replay against observed task state. Formal checks cover the stated models and assumptions, not every implementation detail. See [verify/formal/SKILL.md](verify/formal/SKILL.md) for the correspondence.
 
