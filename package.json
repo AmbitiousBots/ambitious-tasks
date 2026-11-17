@@ -22,9 +22,9 @@
     "release:check": "node scripts/release-check.mjs"
   },
   "devDependencies": {
-    "@ambitious/depcruise": "file:vendor/ambitious-depcruise-0.1.1.tgz",
-    "@ambitious/kit": "file:vendor/ambitious-kit-0.1.1.tgz",
-    "@ambitious/lint": "file:vendor/ambitious-lint-0.1.1.tgz",
+    "@ambitious/depcruise": "file:vendor/ambitious-depcruise-0.3.2.tgz",
+    "@ambitious/kit": "file:vendor/ambitious-kit-0.3.2.tgz",
+    "@ambitious/lint": "file:vendor/ambitious-lint-0.3.2.tgz",
     "@types/node": "24.19.2",
     "dependency-cruiser": "18.7.2",
     "esbuild": "0.28.2",
