@@ -3,11 +3,11 @@ import { embedded } from "@ambitious/kit/cli/embedded";
 import type { JsonObject } from "@ambitious/kit/domain/json";
 import {
   addTask, changeDependency, changeStatus, getTask, history, importTasks, listTasks, listsEverUsed,
-  loadGraph, loadPeople, processEvents, rebuild, taskWithDependencies, updateTask, withReadSnapshot,
+  loadGraph, loadPeople, moveTask, processEvents, rebuild, taskWithDependencies, updateTask, withReadSnapshot,
 } from "../db/tasks.ts";
 import { parseMetrics, parseSimulation } from "../domain/process-input.ts";
 import { processMetrics, simulate } from "../domain/process.ts";
-import { inputError, parseAdd, parseCounts, parseDep, parseEmpty, parseFilter, parseId, parseImport, parseListScope, parseNext, parseStatus, parseUpdate } from "../domain/requests.ts";
+import { inputError, parseAdd, parseCounts, parseDep, parseEmpty, parseFilter, parseId, parseImport, parseListMove, parseListScope, parseNext, parseStatus, parseUpdate } from "../domain/requests.ts";
 import { parseScheduleCheck, parseScheduleSuggest } from "../domain/schedule-input.ts";
 import { checkSchedule, suggestSchedule } from "../domain/schedule.ts";
 import { boardView, graphView, nextTasks, taskCounts } from "../domain/views.ts";
@@ -24,6 +24,7 @@ await runModule({
   commands: {
     add: writeCommand({ input: parseAdd, run: ({ db, input, clock, rng }) => addTask(db, input, clock.now().toISOString(), rng) }),
     update: writeCommand({ input: parseUpdate, run: ({ db, input, clock }) => updateTask(db, input, clock.now().toISOString()) }),
+    "list move": writeCommand({ input: parseListMove, run: ({ db, input, clock }) => moveTask(db, input, clock.now().toISOString()) }),
     status: writeCommand({ input: parseStatus, run: ({ db, input, clock }) => changeStatus(db, input, clock.now().toISOString()) }),
     "dep add": writeCommand({ input: parseDep, run: ({ db, input, clock }) => changeDependency(db, input, clock.now().toISOString(), "add") }),
     "dep rm": writeCommand({ input: parseDep, run: ({ db, input, clock }) => changeDependency(db, input, clock.now().toISOString(), "rm") }),

@@ -117,6 +117,13 @@ export const parseUpdate = (raw: unknown): UpdateInput => {
   return { id: idInput(input.id), patch: taskPatch(objectInput(input.patch, PATCH_FIELDS)), ...writeOptions(input) };
 };
 
+export type ListMoveInput = WriteOptions & { readonly id: TaskId; readonly list: string };
+
+export const parseListMove = (raw: unknown): ListMoveInput => {
+  const input = objectInput(raw, ["id", "list", ...WRITE_FIELDS]);
+  return { id: idInput(input.id), list: textInput(input.list, "list"), ...writeOptions(input) };
+};
+
 export type StatusInput = WriteOptions & {
   readonly id: TaskId;
   readonly status: Status;

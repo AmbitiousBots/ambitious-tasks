@@ -6,14 +6,14 @@ Part of [Ambitious](https://ambitiousbots.com). The shared [module contract](htt
 
 ## Run
 
-The release contains `ambitious-tasks-0.1.2.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
+The release contains `ambitious-tasks-0.1.3.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
 
 ```sh
 shasum -a 256 -c SHA256SUMS
 export AMBITIOUS_HOME="$(mktemp -d)"
-node ambitious-tasks-0.1.2.mjs selfcheck
-printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.2.mjs add
-node ambitious-tasks-0.1.2.mjs next --now 2026-01-01T00:00:00Z --seed 7
+node ambitious-tasks-0.1.3.mjs selfcheck
+printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.3.mjs add
+node ambitious-tasks-0.1.3.mjs next --now 2026-01-01T00:00:00Z --seed 7
 ```
 
 Choose a persistent `AMBITIOUS_HOME` for real work; the temporary directory above is for trying the commands. The default is `/workspace/ambitious`, the module storage directory on a Grok Bot computer. The database lives at `$AMBITIOUS_HOME/tasks/tasks.sqlite`; `--db` overrides that file. Modules refuse `/home/box/agent-data`, the bot's private state directory, including paths that reach it through symbolic links. These documented runtime paths are listed in `.standalone.json`.
@@ -36,12 +36,13 @@ Every response is one line with `{ ok, schemaVersion, module, command, data, err
 | `selfcheck` | write | none | runtime, binary SHA-256, database integrity, applied migrations, problems |
 | `add` | write | `{id?, title, list?, priority?, estimate_days?, due?, assignee?, depends_on?, labels?, done_when?, notes?, idem_key?, actor?}` | `task` |
 | `update` | write | `{id, patch, idem_key?, actor?}` | `task` |
+| `list move` | write | `{id, list, idem_key?, actor?}` | `task`, `moved`, `from_list` |
 | `status` | write | `{id, status, note?, reopen?, idem_key?, actor?}` | `task` |
 | `dep add`, `dep rm` | write | `{task_id, depends_on, idem_key?, actor?}` | `task` |
 | `get` | read | `{id}` | `tasks` containing one task |
 | `list` | read | `{list?, status?, label?, assignee?}` | `tasks` |
 | `import` | write | `{schemaVersion:1 or 2, tasks:[...], idem_key?, actor?}` | `created`, `updated`, `unchanged` counts |
-| `next` | read | `{list?, limit?:10, assignee?}` | `ranked` with id, title, score and reasons |
+| `next` | read | `{list?, limit?:10, assignee?}` | `ranked`: each item is the task as `board` shows it, plus `score` and `reasons` |
 | `graph` | read | `{list?}` | nodes, edges, critical_path, total_days, critical_path_days |
 | `board` | read | `{list?}` | `columns`, each with a status and tasks |
 | `counts` | read | `{list?}` | `list`, `exists`, `open`, `stale7d`, `blocked`, `waiting`, `done7d`, `asOf`, and `note` when the list does not exist |
@@ -49,18 +50,30 @@ Every response is one line with `{ ok, schemaVersion, module, command, data, err
 | `rebuild` | write | `{}` | counts of events replayed and tasks restored |
 | `process metrics` | read | `{list?, from?, to?}` | status wait times, cycle-time percentiles, throughput and bottlenecks |
 | `process simulate` | read | `{list?, scenarios:[{name, capacity_change?, wip_limit?}], runs}` | projected finish dates and durations for each scenario |
-| `schedule suggest` | read | `{list?, people?:[...], horizon_days}` | `assignments` and `violations` |
+| `schedule suggest` | read | `{list?, people?:[{id, name?, capacity_days_per_week, windows?}], horizon_days}` | `assignments` and `violations` |
 | `schedule check` | read | `{assignments, people?:[...], horizon_days?}` | independently checked `violations` |
 
 Reads open SQLite in read-only mode and cannot create or migrate a database. Run `selfcheck` first if a read reports `E_MIGRATION`. Writes apply pending forward-only migrations, then commit the event, task projection and request receipt together. A failed command rolls back its changes. Per-task event times must not move backward; a write with an earlier `--now` fails with `E_TIME`. Idempotency retries still return their original result. Dates must be valid calendar dates, and unrepresentable numeric results fail with `E_RANGE`.
 
 ## Tasks and dependencies
 
-Statuses are `todo`, `in_progress`, `blocked`, `waiting`, `done` and `canceled`. Priority is an integer from 0 through 3, with 0 first. Estimates are days of effort. `update.patch` may change task details, but status changes use `status`, and prerequisites use `dep add` or `dep rm`. To reopen a done task, send `{ "id":"draft", "status":"todo", "reopen":true }`; ordinary updates and imports cannot reopen it.
+Statuses are `todo`, `in_progress`, `blocked`, `waiting`, `done` and `canceled`. Priority is an integer from 0 through 3, with 0 first. Estimates are days of effort. `update.patch` may change task details, including `list`, but status changes use `status`, and prerequisites use `dep add` or `dep rm`. To reopen a done task, send `{ "id":"draft", "status":"todo", "reopen":true }`; ordinary updates and imports cannot reopen it.
 
 Pass a distinct `idem_key` for each intended write and reuse it only when retrying that same request. A retry returns the original result even after later edits. A key reused with a different request fails with `E_IDEMPOTENCY`. No-op requests also reserve their keys. Keys are optional for interactive use, but bot skills require them.
 
 Dependencies point from a task to its prerequisites. Missing prerequisites fail with `E_UNKNOWN_DEP`. A cycle fails with `E_CYCLE` and a closed path of task IDs in `data.cycle`. Neither failure stores any part of the change. Events cannot be updated or deleted through the database schema. `rebuild` replays the complete task and dependency snapshots recorded by events; it does not change history or request receipts.
+
+### Move a task to another list
+
+`list move` changes the list of an existing task and nothing else. The task keeps its id, details, status, prerequisites and history, so there is no need to cancel a task filed in the wrong list and add it again.
+
+```sh
+printf '%s\n' '{"id":"draft","list":"writing","idem_key":"move-draft-to-writing"}' | node ambitious-tasks-0.1.3.mjs list move
+```
+
+`data` holds the `task` after the move, `moved` and `from_list`, the list the task was in before the call. The move sets `updated_at` and appends an `updated` event to the task's history. That event's payload carries `list_move` with the `from` and `to` list names beside the full task snapshot, so `history` shows when a task changed lists and who moved it. Moving a task to the list it is already in succeeds with `moved: false` and stores no event. A blank list name fails with `E_INPUT_SCHEMA` before the database is opened, and an unknown id fails with `E_NOT_FOUND`. The target list needs no setup: a list exists once a task is in it.
+
+`update` with `patch.list` remains valid and is the way to change the list together with other details in one write. When it changes the list, its `updated` event carries the same `list_move` entry.
 
 ### Import
 
@@ -76,16 +89,18 @@ The example dataset in `test/fixtures/work-plan.json` has 104 tasks and 105.5 es
 
 `next` excludes done and canceled tasks, then requires every prerequisite to be done, including prerequisites in other lists. Canceled prerequisites do not count as done. Ready tasks sort by membership in the remaining critical path, earlier due date, lower priority number, smaller estimate, then ascending ID. Missing due dates and estimates sort last. Reasons expose each factor and explicitly flag approval labels; ranking never grants approval.
 
+Each `ranked` item is the whole task with the same fields and values `board` returns for it: `id`, `list`, `title`, `status`, `priority`, `estimate_days`, `due`, `assignee`, `labels`, `done_when`, `notes`, `created_at` and `updated_at`. `score` and `reasons` follow. A field with no value is present as `null`, never left out, so a caller can show the assignee and due date from `next` alone without calling `board` or `get`. Like board tasks, the items do not include `depends_on`; `get` and `list` return it.
+
 `graph.total_days` is the sum of estimates for selected tasks, including closed work. `critical_path_days` is the length of the longest dependency chain, which is a different number. Missing estimates contribute zero to these totals. A list-filtered graph reports selected nodes and their edges; the critical path includes the prerequisite closure so a prerequisite in another list is not silently ignored.
 
 ### Counts
 
 `counts` returns the totals a status report needs for one list, so a caller never adds them up by hand. `list` is optional and matches the task's list name exactly, including letter case. When `list` is left out, `counts` uses the list named `default`, which is the list `add` and `import` put a task in when the task names no list. `data.list` always states the list that was counted. The command reads the database and changes nothing.
 
-`data.exists` tells an empty list apart from a name that was never used. A list exists when at least one event in the task history records a task in that list. Lists are not created on their own: adding or importing a task into a list, or moving a task into it with `update`, is what makes it exist, and it keeps existing after its tasks are finished, canceled or moved to another list. When `exists` is `false`, every count is `null` rather than 0 and `data.note` names the lists that do exist, so a misspelled list name cannot be mistaken for a list with no open work. An unknown list is not an error; the command still succeeds.
+`data.exists` tells an empty list apart from a name that was never used. A list exists when at least one event in the task history records a task in that list. Lists are not created on their own: adding or importing a task into a list, or moving a task into it with `list move` or `update`, is what makes it exist, and it keeps existing after its tasks are finished, canceled or moved to another list. When `exists` is `false`, every count is `null` rather than 0 and `data.note` names the lists that do exist, so a misspelled list name cannot be mistaken for a list with no open work. An unknown list is not an error; the command still succeeds.
 
 ```sh
-printf '%s\n' '{"list":"default"}' | node ambitious-tasks-0.1.2.mjs counts --now 2026-01-15T12:00:00Z
+printf '%s\n' '{"list":"default"}' | node ambitious-tasks-0.1.3.mjs counts --now 2026-01-15T12:00:00Z
 ```
 
 For a list with four open tasks, `data` looks like this:
@@ -121,6 +136,30 @@ Metrics use status history up to `to` or `--now`, whichever comes first. `from` 
 Simulation uses estimates, dependencies and seeded duration samples. `capacity_change` is a fractional change relative to baseline capacity, so 1 doubles capacity and -0.5 halves it. `wip_limit` limits concurrent tasks. Results contain p50/p90 projected finish dates and durations. Unfinished prerequisites outside the selected scope can leave a scenario blocked. These are scenario estimates, not promises of actual delivery.
 
 A person is `{id, name?, capacity_days_per_week, windows?:[{start,end}]}`. Windows use ISO timestamps with time zones; omitted or empty windows mean unrestricted availability. Capacity is effort days per seven elapsed calendar days. For example, one effort day at capacity 3.5 occupies two elapsed days. This is a calendar-time approximation, not a business-calendar optimizer. A task without an estimate uses one effort day for scheduling and simulation. Existing assignees constrain assignment. Suggestions do not persist people or change tasks; pass the same people to `schedule check` when checking a suggestion. Without a request roster, the commands read the existing `people` table.
+
+`schedule suggest` needs `horizon_days`, and in practice it needs `people` too. This module has no command that adds people: the roster travels on each request and is never stored. `people` stays optional, but when it is left out and the `people` table is empty, which is the normal case, every ready task comes back with a `NO_FEASIBLE_SLOT` violation. A body without `horizon_days` fails with `E_INPUT_SCHEMA`, and the error names both `horizon_days` and the `people` roster.
+
+A minimal request for one person who works five effort days a week, available during two working weeks, over a 14-day horizon:
+
+```sh
+printf '%s\n' '{"horizon_days":14,"people":[{"id":"member","capacity_days_per_week":5,"windows":[{"start":"2026-01-05T09:00:00Z","end":"2026-01-09T17:00:00Z"},{"start":"2026-01-12T09:00:00Z","end":"2026-01-16T17:00:00Z"}]}]}' | node ambitious-tasks-0.1.3.mjs schedule suggest --now 2026-01-05T00:00:00Z
+```
+
+With one open task `draft` estimated at one effort day, `data` looks like this:
+
+```json
+{"assignments":[{"task_id":"draft","person_id":"member","start":"2026-01-05T09:00:00.000Z","end":"2026-01-06T18:36:00.000Z"}],"violations":[]}
+```
+
+Each window is one continuous span, and a task must fit inside a single window. One window per working week, as above, keeps work out of the weekend; one window per day would only fit tasks that finish within that day.
+
+A `NO_FEASIBLE_SLOT` violation carries a `reason` and a `hint` that names the `people`, `windows` and `capacity_days_per_week` fields of `schedule suggest`:
+
+| `reason` | Meaning | What to change |
+|---|---|---|
+| `EMPTY_ROSTER` | No people were available: the request had no `people` and the `people` table is empty, or `people` was an empty list. | Send `people` with at least one person. |
+| `ASSIGNEE_NOT_IN_ROSTER` | The task has an assignee whose id is not in the roster. Only the assignee is considered for an assigned task. | Add that person to `people`, or change the assignee with `update`. |
+| `NO_ROOM` | Nobody who can take the task has capacity above zero and a free window long enough within the horizon. | Raise `horizon_days`, widen or add `windows`, or raise `capacity_days_per_week`. |
 
 An assignment is `{task_id, person_id, start, end}`. The independent checker detects overlaps, invalid availability, insufficient duration/capacity, prerequisite order, missing or repeated task/person IDs, and horizon violations. A bot decides whether to apply a suggestion through `update`; the module does not approve or execute work.
 

@@ -40,7 +40,7 @@ const people = [{ id: 'worker-1', name: 'Worker', capacity_days_per_week: 7, win
 const checks = {
   commands: () => {
     const result = ok('commands');
-    for (const name of ['add', 'update', 'status', 'dep add', 'dep rm', 'get', 'list', 'import', 'next', 'graph', 'board', 'counts', 'history', 'rebuild', 'process metrics', 'process simulate', 'schedule suggest', 'schedule check', 'selfcheck', 'commands']) {
+    for (const name of ['add', 'update', 'list move', 'status', 'dep add', 'dep rm', 'get', 'list', 'import', 'next', 'graph', 'board', 'counts', 'history', 'rebuild', 'process metrics', 'process simulate', 'schedule suggest', 'schedule check', 'selfcheck', 'commands']) {
       assert.ok(result.commands.some((entry) => entry.name === name), name);
     }
     for (const name of ['counts', 'process metrics', 'process simulate', 'schedule suggest', 'schedule check']) {
@@ -74,6 +74,30 @@ const checks = {
     assert.deepEqual(result.task.labels, ['planned']);
     assert.deepEqual(ok('update', input), result);
     assert.equal(ok('history', { id: 'one' }).events.length, 2);
+  },
+  'list-move': () => {
+    add('one', { list: 'inbox', assignee: 'worker-1' });
+    const input = { id: 'one', list: 'review', idem_key: 'move-one' };
+    const before = ok('get', { id: 'one' }).tasks[0];
+    const result = ok('list move', input, '2026-01-02T00:00:00Z');
+    assert.equal(result.moved, true);
+    assert.equal(result.from_list, 'inbox');
+    assert.deepEqual(result.task, { ...before, list: 'review', updated_at: '2026-01-02T00:00:00.000Z' });
+    assert.deepEqual(ok('list move', input, '2026-01-03T00:00:00Z'), result);
+    assert.deepEqual(ok('get', { id: 'one' }).tasks, [result.task]);
+    assert.deepEqual(ok('list', { list: 'review' }).tasks.map(({ id }) => id), ['one']);
+    assert.deepEqual(ok('list', { list: 'inbox' }).tasks, []);
+    assert.deepEqual(ok('board', { list: 'review' }).columns.find(({ status }) => status === 'todo').tasks.map(({ id }) => id), ['one']);
+    const events = ok('history', { id: 'one' }).events;
+    assert.deepEqual(events.map(({ kind }) => kind), ['created', 'updated']);
+    assert.deepEqual(events[1].payload.list_move, { from: 'inbox', to: 'review' });
+    assert.deepEqual(ok('list move', { id: 'one', list: 'review', idem_key: 'stay' }), { task: result.task, moved: false, from_list: 'review' });
+    assert.equal(ok('history', { id: 'one' }).events.length, 2);
+    refused('list move', { id: 'one', list: 'archive', idem_key: 'move-one' }, 'E_IDEMPOTENCY');
+    refused('list move', { id: 'one', list: ' ' }, 'E_INPUT_SCHEMA');
+    refused('list move', { id: 'absent', list: 'review' }, 'E_NOT_FOUND');
+    ok('update', { id: 'one', patch: { list: 'archive' } }, '2026-01-04T00:00:00Z');
+    assert.deepEqual(ok('history', { id: 'one' }).events[2].payload.list_move, { from: 'review', to: 'archive' });
   },
   status: () => {
     add('one');
@@ -128,6 +152,14 @@ const checks = {
     for (const task of result.ranked) {
       assert.ok(!['done', 'canceled'].includes(statuses.get(task.id)));
       for (const edge of graph.edges.filter(({ task_id }) => task_id === task.id)) assert.equal(statuses.get(edge.depends_on), 'done');
+    }
+    const board = new Map(ok('board').columns.flatMap(({ tasks }) => tasks).map((task) => [task.id, task]));
+    for (const { score, reasons, ...fields } of result.ranked) {
+      assert.deepEqual(fields, board.get(fields.id));
+      assert.equal(typeof score, 'number');
+      assert.ok(reasons.includes(`priority ${fields.priority}`));
+      assert.ok(reasons.includes(fields.due === null ? 'no due date' : `due ${fields.due}`));
+      for (const field of ['assignee', 'due', 'priority', 'status', 'list', 'estimate_days', 'labels']) assert.ok(Object.hasOwn(fields, field), field);
     }
     assert.equal(invoke('next').stdout, invoke('next').stdout);
   },
@@ -238,6 +270,14 @@ const checks = {
     const second = suggestion.assignments.find(({ task_id }) => task_id === 'two');
     assert.ok(first.end <= second.start);
     assert.deepEqual(ok('schedule check', { assignments: suggestion.assignments, people, horizon_days: 7 }).violations, []);
+    const missing = invoke('schedule suggest', { list: 'default' });
+    assert.equal(missing.status, 1);
+    assert.equal(missing.answer.errors[0].code, 'E_INPUT_SCHEMA');
+    for (const field of ['horizon_days', 'people', 'capacity_days_per_week', 'windows']) assert.ok(missing.answer.errors[0].message.includes(field), field);
+    const empty = ok('schedule suggest', { horizon_days: 7 });
+    assert.deepEqual(empty.assignments, []);
+    assert.deepEqual(empty.violations.map(({ code, reason, task_id }) => [code, reason, task_id]), [['NO_FEASIBLE_SLOT', 'EMPTY_ROSTER', 'one'], ['DEPENDENCY_OPEN', undefined, 'two']]);
+    for (const field of ['schedule suggest', 'people', 'windows', 'capacity_days_per_week']) assert.ok(empty.violations[0].hint.includes(field), field);
     assert.equal(hashDb(), before);
   },
   'schedule-check': () => {

@@ -48,9 +48,7 @@ export type CycleError = {
   readonly cycle: readonly [TaskId, ...TaskId[]];
 };
 
-export type RankedTask = {
-  readonly id: TaskId;
-  readonly title: string;
+export type RankedTask = Task & {
   readonly score: number;
   readonly reasons: readonly string[];
 };
