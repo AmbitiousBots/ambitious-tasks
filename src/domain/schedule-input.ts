@@ -56,11 +56,21 @@ export const parsePeople = (raw: unknown): readonly Person[] => {
     };
   });
 };
+const SUGGEST_HINT = 'Send horizon_days and people together, for example {"horizon_days":14,"people":[{"id":"member","capacity_days_per_week":5,"windows":[{"start":"2026-01-05T09:00:00Z","end":"2026-01-09T17:00:00Z"}]}]}. ' +
+  "The window dates are placeholders: each window must fall between the command time and horizon_days later. Leave windows out for a person who is always available. " +
+  "people is optional, but it is not stored: without it the command reads the stored people table, which is normally empty, and every task then reports NO_FEASIBLE_SLOT.";
 const shared = (raw: Readonly<Record<string, unknown>>) => ({
   ...(raw.people === undefined ? {} : { people: parsePeople(raw.people) }),
 });
 export const parseScheduleSuggest = (raw: unknown): SuggestInput => {
   const record = object(raw, ["list", "people", "horizon_days"]);
+  if (record.horizon_days === undefined) {
+    throw failure("E_INPUT_SCHEMA",
+      record.people === undefined
+        ? "schedule suggest needs horizon_days, a number of days from 0 to 36600, and a people roster: people is a list of { id, capacity_days_per_week, windows }. Neither was sent."
+        : "schedule suggest needs horizon_days, a number of days from 0 to 36600, beside the people roster.",
+      SUGGEST_HINT);
+  }
   return {
     ...shared(record),
     ...(record.list === undefined ? {} : { list: text(record.list, "list") }),

@@ -14,6 +14,7 @@ import {
   type DepInput,
   type FilterInput,
   type ImportInput,
+  type ListMoveInput,
   type StatusInput,
   type UpdateInput,
   type WriteOptions,
@@ -173,6 +174,9 @@ const withReceipt = <T extends JsonObject>(db: Db, command: string, input: Write
   return response;
 };
 
+const listMove = (before: Task, after: Task): JsonObject =>
+  before.list === after.list ? {} : { list_move: { from: before.list, to: after.list } };
+
 export const addTask = (db: Db, input: AddInput, now: string, rng: Rng): JsonObject => withReceipt(db, "add", input, () => {
   const sequence = db.prepare("SELECT COALESCE(MAX(seq), 0) + 1 AS next FROM events").get()?.next;
   const id = input.id ?? idInput(`task-${rng.int(0x100000000).toString(16).padStart(8, "0")}-${String(sequence)}`);
@@ -191,10 +195,21 @@ export const updateTask = (db: Db, input: UpdateInput, now: string): JsonObject 
   const before = getTask(db, input.id);
   const after: Task = { ...before, ...input.patch, updated_at: now };
   if (!sameTask(before, after)) {
-    appendEvent(db, "updated", { task: after, depends_on: dependencyIds(db, input.id) }, now, input);
+    appendEvent(db, "updated", { task: after, depends_on: dependencyIds(db, input.id) }, now, input, listMove(before, after));
     putTask(db, after);
   }
   return { task: taskWithDependencies(db, getTask(db, input.id)) };
+});
+
+export const moveTask = (db: Db, input: ListMoveInput, now: string): JsonObject => withReceipt(db, "list move", input, () => {
+  const before = getTask(db, input.id);
+  const moved = before.list !== input.list;
+  if (moved) {
+    const after: Task = { ...before, list: input.list, updated_at: now };
+    appendEvent(db, "updated", { task: after, depends_on: dependencyIds(db, input.id) }, now, input, listMove(before, after));
+    putTask(db, after);
+  }
+  return { task: taskWithDependencies(db, getTask(db, input.id)), moved, from_list: before.list };
 });
 
 export const changeStatus = (db: Db, input: StatusInput, now: string): JsonObject => withReceipt(db, "status", input, () => {

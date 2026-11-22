@@ -6,7 +6,7 @@ import { test } from "node:test";
 import fc from "fast-check";
 import { items, object, run, scratch, success } from "./cli-helper.ts";
 
-const features = ["commands", "selfcheck", "add", "update", "status", "dep-add", "dep-rm", "get", "list", "import", "next", "graph", "board", "counts", "history", "rebuild", "process-metrics", "process-simulate", "schedule-suggest", "schedule-check"];
+const features = ["commands", "selfcheck", "add", "update", "list-move", "status", "dep-add", "dep-rm", "get", "list", "import", "next", "graph", "board", "counts", "history", "rebuild", "process-metrics", "process-simulate", "schedule-suggest", "schedule-check"];
 for (const feature of features) {
   test(`the built CLI proves ${feature} through its JSON interface`, (t) => {
     const result = spawnSync(process.execPath, ["scripts/verify-feature.mjs", feature], {

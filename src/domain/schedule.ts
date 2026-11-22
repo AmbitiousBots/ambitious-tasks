@@ -27,6 +27,8 @@ export type CheckInput = {
 export type Violation = {
   readonly code: string;
   readonly message: string;
+  readonly reason?: "EMPTY_ROSTER" | "ASSIGNEE_NOT_IN_ROSTER" | "NO_ROOM";
+  readonly hint?: string;
   readonly task_id?: TaskId;
   readonly person_id?: string;
 };
@@ -135,6 +137,32 @@ const availableStart = (
   return null;
 };
 
+const ROSTER_FIELDS = "people is a list of { id, capacity_days_per_week, windows } on the schedule suggest request. It is not stored, so send it on every schedule suggest and schedule check call.";
+
+const noSlot = (people: readonly Person[], task: Task, usedStoredPeople: boolean): Pick<Violation, "message" | "reason" | "hint"> => {
+  if (people.length === 0) {
+    return {
+      reason: "EMPTY_ROSTER",
+      message: usedStoredPeople
+        ? "The request has no people roster and the stored people table is empty, so there is nobody to schedule this task for."
+        : "The people roster in the request is empty, so there is nobody to schedule this task for.",
+      hint: `Add at least one person to people. ${ROSTER_FIELDS}`,
+    };
+  }
+  if (task.assignee !== null && !people.some((person) => person.id === task.assignee)) {
+    return {
+      reason: "ASSIGNEE_NOT_IN_ROSTER",
+      message: `The task is assigned to ${JSON.stringify(task.assignee)}, who is not in the people roster. Only the assignee can be scheduled for an assigned task.`,
+      hint: `Add a person with that id to people, or change the task's assignee with update. ${ROSTER_FIELDS}`,
+    };
+  }
+  return {
+    reason: "NO_ROOM",
+    message: "Nobody who can take this task has capacity above zero and a free availability window long enough for it within the horizon.",
+    hint: `Raise horizon_days, widen or add windows, or raise capacity_days_per_week for a person in people. A task must fit inside one window. Windows that end before the command time or start after the horizon are ignored. ${ROSTER_FIELDS}`,
+  };
+};
+
 export const suggestSchedule = (
   tasks: readonly Task[],
   graph: Graph,
@@ -169,7 +197,7 @@ export const suggestSchedule = (
         .sort((a, b) => a.end - b.end || (a.start ?? Infinity) - (b.start ?? Infinity) || compareText(a.person.id, b.person.id));
       const choice = choices[0];
       if (choice === undefined || choice.start === null || !Number.isFinite(choice.end)) {
-        violations.push({ code: "NO_FEASIBLE_SLOT", message: "No person has enough capacity and an availability window within the horizon for this task.", task_id: id });
+        violations.push({ code: "NO_FEASIBLE_SLOT", ...noSlot(people, task, input.people === undefined), task_id: id });
         continue;
       }
       assignments.push({ task_id: id, person_id: choice.person.id, start: new Date(choice.start).toISOString(), end: new Date(choice.end).toISOString() });

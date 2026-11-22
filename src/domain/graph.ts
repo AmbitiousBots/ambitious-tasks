@@ -140,8 +140,7 @@ export const rank: Rank = (tasks, graph, now) => {
     return compareIds(left.id, right.id);
   });
   return ready.map((task, index) => ({
-    id: task.id,
-    title: task.title,
+    ...task,
     score: ready.length - index,
     reasons: [
       "all dependencies done",
