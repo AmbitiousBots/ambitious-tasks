@@ -159,7 +159,7 @@ A `NO_FEASIBLE_SLOT` violation carries a `reason` and a `hint` that names the `p
 |---|---|---|
 | `EMPTY_ROSTER` | No people were available: the request had no `people` and the `people` table is empty, or `people` was an empty list. | Send `people` with at least one person. |
 | `ASSIGNEE_NOT_IN_ROSTER` | The task has an assignee whose id is not in the roster. Only the assignee is considered for an assigned task. | Add that person to `people`, or change the assignee with `update`. |
-| `NO_ROOM` | Nobody who can take the task has capacity above zero and a free window long enough within the horizon. | Raise `horizon_days`, widen or add `windows`, or raise `capacity_days_per_week`. |
+| `NO_ROOM` | Nobody who can take the task has capacity above zero and a free window long enough within the horizon. | Raise `horizon_days`, widen or add `windows`, or raise `capacity_days_per_week`. Windows that end before the command time or start after the horizon are ignored. |
 
 An assignment is `{task_id, person_id, start, end}`. The independent checker detects overlaps, invalid availability, insufficient duration/capacity, prerequisite order, missing or repeated task/person IDs, and horizon violations. A bot decides whether to apply a suggestion through `update`; the module does not approve or execute work.
 

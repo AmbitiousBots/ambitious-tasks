@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -51,6 +52,46 @@ test("people stays optional for schedule suggest and the hint's example body par
   const example = /for example (\{.*\}\]\}\]\})\. /.exec(String(object(items(object(JSON.parse(hint)).errors)[0]).hint))?.[1];
   assert.ok(example !== undefined);
   assert.equal(parseScheduleSuggest(JSON.parse(example)).people?.length, 1);
+});
+
+const suggestError = (home: string, input?: unknown): Readonly<Record<string, unknown>> => {
+  if (input !== undefined) return object(items(run(home, "schedule suggest", input).envelope.errors)[0]);
+  const result = spawnSync(process.execPath, ["dist/ambitious-tasks.mjs", "schedule", "suggest"], { input: "", encoding: "utf8", env: { ...process.env, AMBITIOUS_HOME: home } });
+  assert.ifError(result.error);
+  assert.equal(result.status, 1);
+  const parsed: unknown = JSON.parse(result.stdout);
+  return object(items(object(parsed).errors)[0]);
+};
+
+test("schedule suggest with empty stdin gets the same horizon_days and people error as an empty object", (t) => {
+  const home = scratch(t);
+  const error = suggestError(home);
+  assert.equal(error.code, "E_INPUT_SCHEMA");
+  for (const field of ["horizon_days", "people", "capacity_days_per_week", "windows"]) assert.match(String(error.message), new RegExp(field));
+  assert.deepEqual(error, suggestError(home, {}));
+  assert.equal(existsSync(join(home, "tasks/tasks.sqlite")), false);
+});
+
+test("the hint's example body schedules at the time its window implies and explains ignored windows at any later time", (t) => {
+  const home = scratch(t);
+  const hint = String(suggestError(home, {}).hint);
+  assert.match(hint, /placeholders/);
+  assert.match(hint, /between the command time and horizon_days later/);
+  assert.match(hint, /Leave windows out/);
+  const example = /for example (\{.*\}\]\}\]\})\. /.exec(hint)?.[1];
+  assert.ok(example !== undefined);
+  const body: unknown = JSON.parse(example);
+  success(home, "add", { id: "draft", title: "Prepare the draft", estimate_days: 1 });
+  const inside = success(home, "schedule suggest", body, "2026-01-05T00:00:00Z");
+  assert.equal(items(inside.assignments).length, 1);
+  assert.deepEqual(inside.violations, []);
+  for (const at of ["2026-01-10T00:00:00Z", "2025-12-01T00:00:00Z"]) {
+    const outside = success(home, "schedule suggest", body, at);
+    assert.deepEqual(outside.assignments, []);
+    const violation = object(items(outside.violations)[0]);
+    assert.equal(violation.reason, "NO_ROOM");
+    assert.match(String(violation.hint), /Windows that end before the command time or start after the horizon are ignored\./);
+  }
 });
 
 test("NO_FEASIBLE_SLOT says whether the roster is empty, the assignee is missing from it, or nobody has room", () => {

@@ -46,4 +46,4 @@ await runModule({
     "schedule suggest": readTasks({ input: parseScheduleSuggest, run: ({ db, input, clock }) => suggestSchedule(listTasks(db), loadGraph(db), loadPeople(db), clock.now().toISOString(), input) }),
     "schedule check": readTasks({ input: parseScheduleCheck, run: ({ db, input, clock }) => checkSchedule(listTasks(db), loadGraph(db), loadPeople(db), clock.now().toISOString(), input) }),
   },
-}, new Set(["list", "next", "graph", "board", "counts", "rebuild", "process metrics"]));
+}, new Set(["list", "next", "graph", "board", "counts", "rebuild", "process metrics", "schedule suggest"]));

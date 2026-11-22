@@ -159,7 +159,7 @@ const noSlot = (people: readonly Person[], task: Task, usedStoredPeople: boolean
   return {
     reason: "NO_ROOM",
     message: "Nobody who can take this task has capacity above zero and a free availability window long enough for it within the horizon.",
-    hint: `Raise horizon_days, widen or add windows, or raise capacity_days_per_week for a person in people. A task must fit inside one window. ${ROSTER_FIELDS}`,
+    hint: `Raise horizon_days, widen or add windows, or raise capacity_days_per_week for a person in people. A task must fit inside one window. Windows that end before the command time or start after the horizon are ignored. ${ROSTER_FIELDS}`,
   };
 };
 
