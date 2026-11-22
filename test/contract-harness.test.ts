@@ -29,5 +29,6 @@ test("the shared contract suite still rejects a binary that opens analysis datab
   assert.equal(result.status, 1, result.stdout + result.stderr);
   assert.match(result.stdout, /FAIL\s+read-only-analysis/);
   assert.match(result.stdout, /a read command must not create the database/);
-  assert.match(result.stdout, /contract: 1 of 6 checks failed/);
+  assert.match(result.stdout, /ok\s+listed-shapes/);
+  assert.match(result.stdout, /contract: 1 of 7 checks failed/);
 });
