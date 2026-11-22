@@ -2,18 +2,18 @@
 
 Ambitious Tasks is a persistent command-line task tracker for bots. It stores tasks, prerequisites and append-only history in SQLite. It suggests available work, reports the critical path, measures process times, simulates finish dates and checks proposed schedules. Every command reads JSON and returns one JSON envelope. There is no user interface, document rendering, network access or AI key requirement.
 
-Part of [Ambitious](https://ambitiousbots.com). The shared [module contract](https://github.com/AmbitiousBots/ambitious-kit/blob/kit-v0.3.2/MODULE_CONTRACT.md) defines the envelope, installation, database and runtime rules.
+Part of [Ambitious](https://ambitiousbots.com). The shared [module contract](https://github.com/AmbitiousBots/ambitious-kit/blob/kit-v0.4.9/MODULE_CONTRACT.md) defines the envelope, installation, database and runtime rules.
 
 ## Run
 
-The release contains `ambitious-tasks-0.1.3.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
+The release contains `ambitious-tasks-0.1.4.mjs` and `SHA256SUMS`. Verify the checksum before running the file with Node 24. The binary includes its dependencies and migrations; it needs no npm install or other repository files.
 
 ```sh
 shasum -a 256 -c SHA256SUMS
 export AMBITIOUS_HOME="$(mktemp -d)"
-node ambitious-tasks-0.1.3.mjs selfcheck
-printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.3.mjs add
-node ambitious-tasks-0.1.3.mjs next --now 2026-01-01T00:00:00Z --seed 7
+node ambitious-tasks-0.1.4.mjs selfcheck
+printf '%s\n' '{"id":"draft","title":"Prepare the draft","estimate_days":1,"idem_key":"create-draft"}' | node ambitious-tasks-0.1.4.mjs add
+node ambitious-tasks-0.1.4.mjs next --now 2026-01-01T00:00:00Z --seed 7
 ```
 
 Choose a persistent `AMBITIOUS_HOME` for real work; the temporary directory above is for trying the commands. The default is `/workspace/ambitious`, the module storage directory on a Grok Bot computer. The database lives at `$AMBITIOUS_HOME/tasks/tasks.sqlite`; `--db` overrides that file. Modules refuse `/home/box/agent-data`, the bot's private state directory, including paths that reach it through symbolic links. These documented runtime paths are listed in `.standalone.json`.
@@ -23,8 +23,10 @@ The kit's [installer](https://github.com/AmbitiousBots/ambitious-kit#start-a-mod
 ## JSON interface
 
 ```text
-ambitious-tasks <command> [--in input.json] [--db tasks.sqlite] [--now ISO8601] [--seed integer] [--json]
+ambitious-tasks <command> [--in input.json] [--db tasks.sqlite] [--now ISO8601] [--seed integer] [--json] [--help]
 ```
+
+`--help` lists all commands. A command followed by `--help` returns its listing without running it.
 
 Pass one JSON object on stdin or with `--in`, never both. `--json` is accepted and changes nothing because output is always JSON. Optional filter commands accept omitted input as `{}`. Required fields are rejected before opening the database.
 
@@ -68,7 +70,7 @@ Dependencies point from a task to its prerequisites. Missing prerequisites fail 
 `list move` changes the list of an existing task and nothing else. The task keeps its id, details, status, prerequisites and history, so there is no need to cancel a task filed in the wrong list and add it again.
 
 ```sh
-printf '%s\n' '{"id":"draft","list":"writing","idem_key":"move-draft-to-writing"}' | node ambitious-tasks-0.1.3.mjs list move
+printf '%s\n' '{"id":"draft","list":"writing","idem_key":"move-draft-to-writing"}' | node ambitious-tasks-0.1.4.mjs list move
 ```
 
 `data` holds the `task` after the move, `moved` and `from_list`, the list the task was in before the call. The move sets `updated_at` and appends an `updated` event to the task's history. That event's payload carries `list_move` with the `from` and `to` list names beside the full task snapshot, so `history` shows when a task changed lists and who moved it. Moving a task to the list it is already in succeeds with `moved: false` and stores no event. A blank list name fails with `E_INPUT_SCHEMA` before the database is opened, and an unknown id fails with `E_NOT_FOUND`. The target list needs no setup: a list exists once a task is in it.
@@ -100,7 +102,7 @@ Each `ranked` item is the whole task with the same fields and values `board` ret
 `data.exists` tells an empty list apart from a name that was never used. A list exists when at least one event in the task history records a task in that list. Lists are not created on their own: adding or importing a task into a list, or moving a task into it with `list move` or `update`, is what makes it exist, and it keeps existing after its tasks are finished, canceled or moved to another list. When `exists` is `false`, every count is `null` rather than 0 and `data.note` names the lists that do exist, so a misspelled list name cannot be mistaken for a list with no open work. An unknown list is not an error; the command still succeeds.
 
 ```sh
-printf '%s\n' '{"list":"default"}' | node ambitious-tasks-0.1.3.mjs counts --now 2026-01-15T12:00:00Z
+printf '%s\n' '{"list":"default"}' | node ambitious-tasks-0.1.4.mjs counts --now 2026-01-15T12:00:00Z
 ```
 
 For a list with four open tasks, `data` looks like this:
@@ -142,7 +144,7 @@ A person is `{id, name?, capacity_days_per_week, windows?:[{start,end}]}`. Windo
 A minimal request for one person who works five effort days a week, available during two working weeks, over a 14-day horizon:
 
 ```sh
-printf '%s\n' '{"horizon_days":14,"people":[{"id":"member","capacity_days_per_week":5,"windows":[{"start":"2026-01-05T09:00:00Z","end":"2026-01-09T17:00:00Z"},{"start":"2026-01-12T09:00:00Z","end":"2026-01-16T17:00:00Z"}]}]}' | node ambitious-tasks-0.1.3.mjs schedule suggest --now 2026-01-05T00:00:00Z
+printf '%s\n' '{"horizon_days":14,"people":[{"id":"member","capacity_days_per_week":5,"windows":[{"start":"2026-01-05T09:00:00Z","end":"2026-01-09T17:00:00Z"},{"start":"2026-01-12T09:00:00Z","end":"2026-01-16T17:00:00Z"}]}]}' | node ambitious-tasks-0.1.4.mjs schedule suggest --now 2026-01-05T00:00:00Z
 ```
 
 With one open task `draft` estimated at one effort day, `data` looks like this:
@@ -178,7 +180,7 @@ npm audit
 
 `release:check` runs types, lint and standalone wording, import boundaries, unit/property and CLI tests, the shared contract tests, TLA+/TLC, Lean, feature verification and release packaging. `release:build` creates the single executable and checksum file in ignored `release/`. `verify/run --doctor`, `--list` and `--only <feature>` support targeted verification. Each feature uses a fresh `AMBITIOUS_HOME`, removes its test database afterward and retains its log.
 
-The kit 0.3.2 read-only contract probe sends an empty object to every command. Commands such as `get` need a valid ID before opening a database; `counts` accepts the empty object as is. `scripts/contract.mjs` supplies valid command-specific inputs to that probe while preserving every shared assertion and testing the actual executable. The adapter fails if the upstream probe changes. A mutation test confirms that the adapted suite rejects a binary that opens analysis databases for writing. Vendored packages remain unchanged.
+The kit 0.4.9 read-only contract probe sends an empty object to every command. Commands such as `get` need a valid ID before opening a database; `counts` accepts the empty object as is. `scripts/contract.mjs` supplies valid command-specific inputs to that probe while preserving every shared assertion and testing the actual executable. The adapter fails if the upstream probe changes. A mutation test confirms that the adapted suite rejects a binary that opens analysis databases for writing. Vendored packages remain unchanged.
 
 The TLA+ lifecycle model checks four tasks and the ordering invariants described in [spec/README.md](spec/README.md). Deliberately broken variants must fail their named invariants. Lean proves the reachability-based cycle check and next-task soundness for arbitrary graph sizes. Property tests compare the TypeScript cycle check with a brute-force evaluator on 10,000 generated graphs and check event replay against observed task state. Formal checks cover the stated models and assumptions, not every implementation detail. See [verify/formal/SKILL.md](verify/formal/SKILL.md) for the correspondence.
 
